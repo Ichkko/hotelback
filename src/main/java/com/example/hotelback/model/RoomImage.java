@@ -16,12 +16,9 @@ public class RoomImage extends BaseEntity {
     @JsonIgnore
     private Room room;
 
-    @Column(name = "image_url", nullable = false, length = 500)
+    @Column(name = "image_url", nullable = false, length = 255)
     private String imageUrl;
 
-    @Column(name = "is_primary")
-    private Boolean isPrimary = false;
-
-    @Column(name = "sort_order")
-    private Integer sortOrder = 0;
+    @Column(name = "description", length = 255)
+    private String description;
 }

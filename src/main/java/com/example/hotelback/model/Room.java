@@ -12,11 +12,10 @@ import java.util.List;
 @Setter
 @Entity
 @Table(name = "rooms")
-public class Room extends BaseEntity{
-
+public class Room extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "hotel_id")
+    @JoinColumn(name = "hotel_id", nullable = false)
     private Hotel hotel;
 
     @Column(name = "room_type", length = 100)
@@ -33,5 +32,4 @@ public class Room extends BaseEntity{
 
     @OneToMany(mappedBy = "room", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<RoomImage> roomImages = new ArrayList<>();
-
 }

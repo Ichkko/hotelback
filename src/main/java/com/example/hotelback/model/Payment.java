@@ -3,7 +3,6 @@ package com.example.hotelback.model;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
-import org.hibernate.annotations.ColumnDefault;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -15,7 +14,7 @@ import java.time.Instant;
 public class Payment extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "booking_id")
+    @JoinColumn(name = "booking_id", nullable = false)
     private Booking booking;
 
     @Column(name = "amount", precision = 10, scale = 2)
@@ -27,8 +26,6 @@ public class Payment extends BaseEntity {
     @Column(name = "status", length = 50)
     private String status;
 
-    @ColumnDefault("CURRENT_TIMESTAMP")
     @Column(name = "payment_date")
     private Instant paymentDate;
-
 }
