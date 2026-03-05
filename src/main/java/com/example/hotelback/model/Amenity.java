@@ -1,7 +1,6 @@
 package com.example.hotelback.model;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -16,7 +15,6 @@ public class Amenity extends BaseEntity {
     @JoinColumn(name = "hotel_id")
     private Hotel hotel;
 
-    @Size(max = 100)
     @Column(name = "amenity_name", length = 100)
     private String amenityName;
 

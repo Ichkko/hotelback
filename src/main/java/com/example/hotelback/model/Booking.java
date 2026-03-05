@@ -1,7 +1,6 @@
 package com.example.hotelback.model;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -28,7 +27,6 @@ public class Booking extends BaseEntity{
     @Column(name = "checkout_date")
     private LocalDate checkoutDate;
 
-    @Size(max = 50)
     @Column(name = "status", length = 50)
     private String status;
 

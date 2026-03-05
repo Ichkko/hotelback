@@ -1,5 +1,6 @@
 package com.example.hotelback.controller;
 
+import com.example.hotelback.model.BaseEntity;
 import com.example.hotelback.model.Hotel;
 import com.example.hotelback.service.HotelService;
 import org.springframework.http.ResponseEntity;
@@ -9,7 +10,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/hotels")
-public class HotelController {
+public class HotelController extends BaseEntity {
 
     private final HotelService hotelService;
 
