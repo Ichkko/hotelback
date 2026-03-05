@@ -1,14 +1,18 @@
 package com.example.hotelback.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import jakarta.persistence.*;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
 
- 
-import java.math.BigDecimal;
 import java.util.ArrayList;
- 
 import java.util.List;
 
 @Getter
@@ -17,13 +21,11 @@ import java.util.List;
 @Table(name = "rooms")
 public class Room extends BaseEntity {
 
- 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "hotel_id", nullable = false)
     private Hotel hotel;
 
     @Column(name = "room_type", length = 100)
-
     private String roomType;
 
     @Column(name = "price")
@@ -37,4 +39,8 @@ public class Room extends BaseEntity {
 
     @OneToMany(mappedBy = "room", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<RoomImage> roomImages = new ArrayList<>();
+
+    @JsonIgnore
+    @OneToMany(mappedBy = "room")
+    private List<Booking> bookings = new ArrayList<>();
 }

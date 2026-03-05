@@ -1,10 +1,15 @@
 package com.example.hotelback.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Getter
 @Setter
@@ -26,4 +31,8 @@ public class User extends BaseEntity {
 
     @Column(name = "role", length = 20)
     private String role;
+
+    @JsonIgnore
+    @OneToMany(mappedBy = "user")
+    private List<Booking> bookings = new ArrayList<>();
 }
