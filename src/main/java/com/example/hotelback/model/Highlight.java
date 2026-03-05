@@ -18,4 +18,5 @@ public class Highlight extends BaseEntity{
     @Column(name = "highlight_name", length = 100)
     private String highlightName;
 
+
 }

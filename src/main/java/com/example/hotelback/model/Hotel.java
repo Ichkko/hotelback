@@ -5,6 +5,8 @@ import lombok.Getter;
 import lombok.Setter;
 import org.antlr.v4.runtime.misc.NotNull;
 
+import java.util.List;
+
 @Getter
 @Setter
 @Entity
@@ -30,4 +32,6 @@ public class Hotel extends BaseEntity {
     @Lob
     @Column(name = "description")
     private String description;
+
+
 }
