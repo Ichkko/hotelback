@@ -8,11 +8,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
- 
 @RequestMapping("/api/amenities")
- 
-@RequestMapping("/api/amenitys")
- 
 public class AmenityController {
 
     private final AmenityService amenityService;
@@ -27,13 +23,8 @@ public class AmenityController {
     }
 
     @GetMapping
- 
     public ResponseEntity<List<Amenity>> getAllAmenities() {
         return ResponseEntity.ok(amenityService.getAllAmenities());
- 
-    public ResponseEntity<List<Amenity>> getAllAmenitys() {
-        return ResponseEntity.ok(amenityService.getAllAmenitys());
- 
     }
 
     @GetMapping("/{id}")

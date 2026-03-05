@@ -23,9 +23,7 @@ public class Room extends BaseEntity {
     private Hotel hotel;
 
     @Column(name = "room_type", length = 100)
- 
-    @Column(name = "room_type")
- 
+
     private String roomType;
 
     @Column(name = "price")

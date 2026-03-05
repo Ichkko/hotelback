@@ -33,5 +33,5 @@ public class Hotel extends BaseEntity {
  
 
 
-}
+
  
