@@ -6,6 +6,8 @@ import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.List;
+
 @Getter
 @Setter
 @Entity
@@ -26,4 +28,10 @@ public class Hotel extends BaseEntity {
 
     @Column(name = "description", columnDefinition = "TINYTEXT")
     private String description;
+ 
 }
+ 
+
+
+}
+ 
