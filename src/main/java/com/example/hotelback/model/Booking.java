@@ -10,15 +10,14 @@ import java.time.LocalDate;
 @Setter
 @Entity
 @Table(name = "bookings")
-public class Booking extends BaseEntity{
-
+public class Booking extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id")
+    @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "room_id")
+    @JoinColumn(name = "room_id", nullable = false)
     private Room room;
 
     @Column(name = "checkin_date")
@@ -29,5 +28,4 @@ public class Booking extends BaseEntity{
 
     @Column(name = "status", length = 50)
     private String status;
-
 }

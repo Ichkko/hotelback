@@ -1,4 +1,4 @@
-package com.example.hotelback.service.ipml;
+package com.example.hotelback.service.impl;
 
 
 import com.example.hotelback.model.Hotel;

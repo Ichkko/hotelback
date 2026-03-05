@@ -8,15 +8,18 @@ import lombok.Setter;
 @Setter
 @Entity
 @Table(name = "highlights")
-public class Highlight extends BaseEntity{
-
+public class Highlight extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "hotel_id")
+    @JoinColumn(name = "hotel_id", nullable = false)
     private Hotel hotel;
 
     @Column(name = "highlight_name", length = 100)
     private String highlightName;
+ 
+}
+ 
 
 
 }
+ 

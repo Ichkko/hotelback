@@ -9,7 +9,7 @@ public interface AmenityService {
 
     Amenity createAmenity(Amenity amenity);
 
-    List<Amenity> getAllAmenitys();
+    List<Amenity> getAllAmenities();
 
     Optional<Amenity> getAmenityById(Long id);
 

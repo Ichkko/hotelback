@@ -1,9 +1,10 @@
 package com.example.hotelback.model;
 
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
-import org.antlr.v4.runtime.misc.NotNull;
 
 import java.util.List;
 
@@ -13,25 +14,24 @@ import java.util.List;
 @Table(name = "hotels")
 public class Hotel extends BaseEntity {
 
-
     @Column(name = "name", nullable = false, length = 150)
     private String name;
 
-
-    @Column(name = "address")
+    @Column(name = "address", length = 255)
     private String address;
-
 
     @Column(name = "aimag", length = 100)
     private String aimag;
 
-
     @Column(name = "phone", length = 20)
     private String phone;
 
-    @Lob
-    @Column(name = "description")
+    @Column(name = "description", columnDefinition = "TINYTEXT")
     private String description;
+ 
+}
+ 
 
 
 }
+ 

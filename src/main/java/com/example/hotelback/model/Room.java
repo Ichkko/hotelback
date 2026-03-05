@@ -5,6 +5,10 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
+ 
+import java.math.BigDecimal;
+import java.util.ArrayList;
+ 
 import java.util.List;
 
 @Getter
@@ -13,7 +17,15 @@ import java.util.List;
 @Table(name = "rooms")
 public class Room extends BaseEntity {
 
+ 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "hotel_id", nullable = false)
+    private Hotel hotel;
+
+    @Column(name = "room_type", length = 100)
+ 
     @Column(name = "room_type")
+ 
     private String roomType;
 
     @Column(name = "price")
@@ -25,5 +37,6 @@ public class Room extends BaseEntity {
     @Column(name = "status")
     private String status;
 
-
+    @OneToMany(mappedBy = "room", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<RoomImage> roomImages = new ArrayList<>();
 }
