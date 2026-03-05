@@ -5,6 +5,8 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
 
 @Getter
 @Setter
@@ -28,5 +30,8 @@ public class Room extends BaseEntity{
 
     @Column(name = "status", length = 50)
     private String status;
+
+    @OneToMany(mappedBy = "room", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<RoomImage> roomImages = new ArrayList<>();
 
 }
