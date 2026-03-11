@@ -1,9 +1,9 @@
 package com.example.hotelback.service.impl;
 
+import com.example.hotelback.exception.ResourceNotFoundException;
 import com.example.hotelback.model.Room;
 import com.example.hotelback.repository.RoomRepository;
 import com.example.hotelback.service.RoomService;
-import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -34,15 +34,26 @@ public class RoomServiceImpl implements RoomService {
     }
 
     @Override
+    public List<Room> getRoomsByHotelId(Long hotelId) {
+        return roomRepository.findByHotel_Id(hotelId);
+    }
+
+    @Override
     public Room updateRoom(Long id, Room room) {
         Room existing = roomRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Room not found"));
-        BeanUtils.copyProperties(room, existing, "id", "createdAt", "updatedAt");
+                .orElseThrow(() -> new ResourceNotFoundException("Өрөө олдсонгүй: ID=" + id));
+        existing.setRoomType(room.getRoomType());
+        existing.setPrice(room.getPrice());
+        existing.setCapacity(room.getCapacity());
+        existing.setStatus(room.getStatus());
         return roomRepository.save(existing);
     }
 
     @Override
     public void deleteRoomById(Long id) {
+        if (!roomRepository.existsById(id)) {
+            throw new ResourceNotFoundException("Өрөө олдсонгүй: ID=" + id);
+        }
         roomRepository.deleteById(id);
     }
 }

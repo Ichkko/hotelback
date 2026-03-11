@@ -13,6 +13,8 @@ public interface RoomService {
 
     Optional<Room> getRoomById(Long id);
 
+    List<Room> getRoomsByHotelId(Long hotelId);
+
     Room updateRoom(Long id, Room room);
 
     void deleteRoomById(Long id);

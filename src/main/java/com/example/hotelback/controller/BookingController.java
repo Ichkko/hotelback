@@ -27,6 +27,11 @@ public class BookingController {
         return ResponseEntity.ok(bookingService.getAllBookings());
     }
 
+    @GetMapping("/user/{userId}")
+    public ResponseEntity<List<Booking>> getBookingsByUser(@PathVariable Long userId) {
+        return ResponseEntity.ok(bookingService.getBookingsByUserId(userId));
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<Booking> getBookingById(@PathVariable Long id) {
         return bookingService.getBookingById(id)
@@ -42,6 +47,6 @@ public class BookingController {
     @DeleteMapping("/{id}")
     public ResponseEntity<String> deleteBooking(@PathVariable Long id) {
         bookingService.deleteBookingById(id);
-        return ResponseEntity.ok("Booking with ID " + id + " deleted successfully");
+        return ResponseEntity.ok("Захиалга устгагдлаа");
     }
 }

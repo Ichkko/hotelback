@@ -5,6 +5,7 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
+import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -17,6 +18,7 @@ import java.util.List;
 @Table(name = "hotels")
 public class Hotel extends BaseEntity {
 
+    @NotBlank(message = "Зочид буудлын нэр хоосон байж болохгүй")
     @Column(name = "name", nullable = false, length = 150)
     private String name;
 

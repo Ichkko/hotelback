@@ -27,6 +27,11 @@ public class RoomController {
         return ResponseEntity.ok(roomService.getAllRooms());
     }
 
+    @GetMapping("/hotel/{hotelId}")
+    public ResponseEntity<List<Room>> getRoomsByHotel(@PathVariable Long hotelId) {
+        return ResponseEntity.ok(roomService.getRoomsByHotelId(hotelId));
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<Room> getRoomById(@PathVariable Long id) {
         return roomService.getRoomById(id)
@@ -42,6 +47,6 @@ public class RoomController {
     @DeleteMapping("/{id}")
     public ResponseEntity<String> deleteRoom(@PathVariable Long id) {
         roomService.deleteRoomById(id);
-        return ResponseEntity.ok("Room with ID " + id + " deleted successfully");
+        return ResponseEntity.ok("Өрөө устгагдлаа");
     }
 }

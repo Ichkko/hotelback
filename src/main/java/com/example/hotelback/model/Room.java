@@ -9,6 +9,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -20,10 +21,15 @@ import java.util.List;
 @Entity
 @Table(name = "rooms")
 public class Room extends BaseEntity {
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "hotel_id", nullable = false)
+    @ManyToOne
+    @JoinColumn(name = "hotel_id")
+    @JsonIgnore
     private Hotel hotel;
+
+    @Transient
+    public Long getHotelId() {
+        return hotel != null ? hotel.getId() : null;
+    }
 
     @Column(name = "room_type", length = 100)
     private String roomType;

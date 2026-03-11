@@ -1,6 +1,7 @@
 package com.example.hotelback.service.impl;
 
 
+import com.example.hotelback.exception.ResourceNotFoundException;
 import com.example.hotelback.model.Hotel;
 import com.example.hotelback.repository.HotelRepository;
 import com.example.hotelback.service.HotelService;
@@ -41,7 +42,7 @@ public class HotelServiceImpl implements HotelService {
     @Override
     public Hotel updateHotel(Hotel hotel) {
         Hotel existing = hotelRepository.findById(hotel.getId())
-                .orElseThrow(() -> new RuntimeException("Hotel not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Зочид буудал олдсонгүй: ID=" + hotel.getId()));
         existing.setName(hotel.getName());
         existing.setAddress(hotel.getAddress());
         existing.setAimag(hotel.getAimag());
@@ -52,6 +53,9 @@ public class HotelServiceImpl implements HotelService {
 
     @Override
     public void deleteHotelById(Long id) {
+        if (!hotelRepository.existsById(id)) {
+            throw new ResourceNotFoundException("Зочид буудал олдсонгүй: ID=" + id);
+        }
         hotelRepository.deleteById(id);
     }
 
@@ -59,6 +63,4 @@ public class HotelServiceImpl implements HotelService {
     public List<Hotel> searchHotelsByName(String name) {
         return hotelRepository.findByNameContainingIgnoreCase(name);
     }
-
-
 }

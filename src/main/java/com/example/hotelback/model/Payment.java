@@ -1,5 +1,6 @@
 package com.example.hotelback.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -15,6 +16,7 @@ public class Payment extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "booking_id", nullable = false)
+    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler", "payments"})
     private Booking booking;
 
     @Column(name = "amount", precision = 10, scale = 2)

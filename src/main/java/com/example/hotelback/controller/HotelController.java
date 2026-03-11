@@ -1,8 +1,10 @@
 package com.example.hotelback.controller;
 
-import com.example.hotelback.model.BaseEntity;
 import com.example.hotelback.model.Hotel;
+import com.example.hotelback.model.Room;
 import com.example.hotelback.service.HotelService;
+import com.example.hotelback.service.RoomService;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -10,16 +12,18 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/hotels")
-public class HotelController extends BaseEntity {
+public class HotelController {
 
     private final HotelService hotelService;
+    private final RoomService roomService;
 
-    public HotelController(HotelService hotelService) {
+    public HotelController(HotelService hotelService, RoomService roomService) {
         this.hotelService = hotelService;
+        this.roomService = roomService;
     }
 
     @PostMapping
-    public ResponseEntity<Hotel> createHotel(@RequestBody Hotel hotel) {
+    public ResponseEntity<Hotel> createHotel(@Valid @RequestBody Hotel hotel) {
         return ResponseEntity.ok(hotelService.createHotel(hotel));
     }
 
@@ -33,6 +37,11 @@ public class HotelController extends BaseEntity {
         return ResponseEntity.ok(hotelService.getAllHotels());
     }
 
+    @GetMapping("/search")
+    public ResponseEntity<List<Hotel>> searchHotels(@RequestParam String name) {
+        return ResponseEntity.ok(hotelService.searchHotelsByName(name));
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<Hotel> getHotelById(@PathVariable Long id) {
         return hotelService.getHotelById(id)
@@ -40,8 +49,13 @@ public class HotelController extends BaseEntity {
                 .orElse(ResponseEntity.notFound().build());
     }
 
+    @GetMapping("/{id}/rooms")
+    public ResponseEntity<List<Room>> getHotelRooms(@PathVariable Long id) {
+        return ResponseEntity.ok(roomService.getRoomsByHotelId(id));
+    }
+
     @PutMapping("/{id}")
-    public ResponseEntity<Hotel> updateHotel(@PathVariable Long id, @RequestBody Hotel hotel) {
+    public ResponseEntity<Hotel> updateHotel(@PathVariable Long id, @Valid @RequestBody Hotel hotel) {
         hotel.setId(id);
         return ResponseEntity.ok(hotelService.updateHotel(hotel));
     }
@@ -49,8 +63,6 @@ public class HotelController extends BaseEntity {
     @DeleteMapping("/{id}")
     public ResponseEntity<String> deleteHotel(@PathVariable Long id) {
         hotelService.deleteHotelById(id);
-        return ResponseEntity.ok("Hotel with ID " + id + " deleted successfully");
+        return ResponseEntity.ok("Зочид буудал устгагдлаа");
     }
-
-
 }
