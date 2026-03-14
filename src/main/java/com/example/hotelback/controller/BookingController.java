@@ -44,6 +44,16 @@ public class BookingController {
         return ResponseEntity.ok(bookingService.updateBooking(id, booking));
     }
 
+    @PostMapping("/{id}/confirm")
+    public ResponseEntity<Booking> confirmBooking(@PathVariable Long id) {
+        return ResponseEntity.ok(bookingService.confirmBooking(id));
+    }
+
+    @PostMapping("/{id}/cancel")
+    public ResponseEntity<Booking> cancelBooking(@PathVariable Long id) {
+        return ResponseEntity.ok(bookingService.cancelBooking(id));
+    }
+
     @DeleteMapping("/{id}")
     public ResponseEntity<String> deleteBooking(@PathVariable Long id) {
         bookingService.deleteBookingById(id);

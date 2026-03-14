@@ -1,11 +1,13 @@
 package com.example.hotelback.service.impl;
 
 import com.example.hotelback.exception.ResourceNotFoundException;
+import com.example.hotelback.model.BookingStatus;
 import com.example.hotelback.model.Room;
 import com.example.hotelback.repository.RoomRepository;
 import com.example.hotelback.service.RoomService;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -55,5 +57,22 @@ public class RoomServiceImpl implements RoomService {
             throw new ResourceNotFoundException("Өрөө олдсонгүй: ID=" + id);
         }
         roomRepository.deleteById(id);
+    }
+
+    @Override
+    public List<Room> getAvailableRooms(Long hotelId, LocalDate checkin, LocalDate checkout) {
+        if (checkin == null || checkout == null) {
+            throw new IllegalArgumentException("Check-in, check-out хоёулаа заавал бөглөгдөнө");
+        }
+        if (!checkout.isAfter(checkin)) {
+            throw new IllegalArgumentException("Check-out нь check-in-ээс хойшхи өдөр байх ёстой");
+        }
+
+        return roomRepository.findAvailableRoomsByHotelAndDates(
+                hotelId,
+                checkin,
+                checkout,
+                List.of(BookingStatus.NEW, BookingStatus.CONFIRMED, BookingStatus.PAID)
+        );
     }
 }

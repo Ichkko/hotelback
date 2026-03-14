@@ -18,4 +18,8 @@ public interface BookingService {
     Booking updateBooking(Long id, Booking booking);
 
     void deleteBookingById(Long id);
+
+    Booking confirmBooking(Long id);
+
+    Booking cancelBooking(Long id);
 }

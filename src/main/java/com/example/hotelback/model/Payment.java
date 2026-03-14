@@ -1,7 +1,14 @@
 package com.example.hotelback.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -25,8 +32,9 @@ public class Payment extends BaseEntity {
     @Column(name = "payment_method", length = 50)
     private String paymentMethod;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "status", length = 50)
-    private String status;
+    private PaymentStatus status;
 
     @Column(name = "payment_date")
     private Instant paymentDate;

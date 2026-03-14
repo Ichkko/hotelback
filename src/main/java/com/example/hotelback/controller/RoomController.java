@@ -2,9 +2,11 @@ package com.example.hotelback.controller;
 
 import com.example.hotelback.model.Room;
 import com.example.hotelback.service.RoomService;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @RestController
@@ -30,6 +32,15 @@ public class RoomController {
     @GetMapping("/hotel/{hotelId}")
     public ResponseEntity<List<Room>> getRoomsByHotel(@PathVariable Long hotelId) {
         return ResponseEntity.ok(roomService.getRoomsByHotelId(hotelId));
+    }
+
+    @GetMapping("/hotel/{hotelId}/available")
+    public ResponseEntity<List<Room>> getAvailableRooms(
+            @PathVariable Long hotelId,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate checkin,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate checkout
+    ) {
+        return ResponseEntity.ok(roomService.getAvailableRooms(hotelId, checkin, checkout));
     }
 
     @GetMapping("/{id}")
