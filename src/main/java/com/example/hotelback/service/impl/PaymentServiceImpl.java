@@ -78,7 +78,7 @@ public class PaymentServiceImpl implements PaymentService {
 
         // Хэрэв бүрэн төлөгдсөн бол booking төлөвийг PAID болгох
         if (newTotalPaid.compareTo(expectedTotal) == 0) {
-            booking.setStatus("PAID");
+            booking.setStatus(BookingStatus.PAID);
             bookingRepository.save(booking);
         }
 
