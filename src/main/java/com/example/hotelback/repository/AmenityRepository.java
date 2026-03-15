@@ -2,6 +2,7 @@ package com.example.hotelback.repository;
 
 import com.example.hotelback.model.Amenity;
 import org.springframework.data.jpa.repository.JpaRepository;
+
 import org.springframework.stereotype.Repository;
 
 @Repository

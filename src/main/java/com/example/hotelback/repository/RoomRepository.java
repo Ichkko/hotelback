@@ -12,18 +12,31 @@ import java.util.List;
 
 @Repository
 public interface RoomRepository extends JpaRepository<Room, Long> {
-    List<Room> findByHotel_Id(Long hotelId);
+
+    @Query(value = "select r from Room r where r.hotel.id = :hotelId", countQuery = "select count(r) from Room r where r.hotel.id = :hotelId")
+    List<Room> findByHotel_Id(@Param("hotelId") Long hotelId);
 
     /**
      * Тухайн зочид буудлын захиалгад ороогүй (available) өрөөнүүдийг буцаана.
      */
-    @Query("""
+    @Query(value = """
         select r
         from Room r
         where r.hotel.id = :hotelId
           and r.id not in (
             select b.room.id
-            from com.example.hotelback.model.Booking b
+            from Booking b
+            where b.status in :statuses
+              and b.checkinDate < :newCheckout
+              and b.checkoutDate > :newCheckin
+          )
+        """, countQuery = """
+        select count(r)
+        from Room r
+        where r.hotel.id = :hotelId
+          and r.id not in (
+            select b.room.id
+            from Booking b
             where b.status in :statuses
               and b.checkinDate < :newCheckout
               and b.checkoutDate > :newCheckin
