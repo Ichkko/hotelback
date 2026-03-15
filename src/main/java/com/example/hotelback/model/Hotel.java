@@ -34,6 +34,12 @@ public class Hotel extends BaseEntity {
     @Column(name = "description", columnDefinition = "TINYTEXT")
     private String description;
 
+    @Column(name = "starting_price")
+    private Double startingPrice;
+
+    @Column(name = "cover_image_url", length = 255)
+    private String coverImageUrl;
+
     @JsonIgnore
     @OneToMany(mappedBy = "hotel")
     private List<Room> rooms = new ArrayList<>();
