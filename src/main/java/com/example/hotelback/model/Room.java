@@ -3,9 +3,8 @@ package com.example.hotelback.model;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
@@ -42,7 +41,7 @@ public class Room extends BaseEntity {
     @Column(name = "capacity")
     private Integer capacity;
 
-    @Enumerated(EnumType.STRING)
+    @Convert(converter = RoomStatusConverter.class)
     @Column(name = "status")
     private RoomStatus status;
 
