@@ -58,9 +58,10 @@ public class PaymentServiceImpl implements PaymentService {
                 java.math.BigDecimal.valueOf(booking.getRoom().getPrice())
                         .multiply(java.math.BigDecimal.valueOf(nights));
 
-        // Өмнө хийгдсэн төлбөрүүдийг шалгах
+        // Өмнө хийгдсэн амжилттай төлбөрүүдийг шалгах (SUCCESS статустай төлбөрүүдийг л тооцно)
         java.math.BigDecimal alreadyPaid = paymentRepository.findByBooking_Id(booking.getId())
                 .stream()
+                .filter(p -> p.getStatus() == PaymentStatus.SUCCESS)
                 .map(Payment::getAmount)
                 .reduce(java.math.BigDecimal.ZERO, java.math.BigDecimal::add);
 

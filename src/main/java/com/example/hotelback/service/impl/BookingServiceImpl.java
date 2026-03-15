@@ -72,6 +72,18 @@ public class BookingServiceImpl implements BookingService {
 
         validateDates(booking.getCheckinDate(), booking.getCheckoutDate());
 
+        // Шинэ огноонууд өөр booking-үүдтэй давхцаж байгаа эсэхийг шалгах
+        List<Booking> overlaps = bookingRepository.findOverlappingBookings(
+                existing.getRoom().getId(),
+                booking.getCheckinDate(),
+                booking.getCheckoutDate(),
+                List.of(BookingStatus.NEW, BookingStatus.CONFIRMED, BookingStatus.PAID)
+        );
+        boolean hasConflict = overlaps.stream().anyMatch(b -> !b.getId().equals(id));
+        if (hasConflict) {
+            throw new IllegalStateException("Энэ хугацаанд өрөө аль хэдийнэ өөр захиалгатай байна");
+        }
+
         existing.setCheckinDate(booking.getCheckinDate());
         existing.setCheckoutDate(booking.getCheckoutDate());
         existing.setStatus(booking.getStatus());
