@@ -48,6 +48,8 @@ public class HotelServiceImpl implements HotelService {
         existing.setAimag(hotel.getAimag());
         existing.setPhone(hotel.getPhone());
         existing.setDescription(hotel.getDescription());
+        existing.setStartingPrice(hotel.getStartingPrice());
+        existing.setCoverImageUrl(hotel.getCoverImageUrl());
         return hotelRepository.save(existing);
     }
 
