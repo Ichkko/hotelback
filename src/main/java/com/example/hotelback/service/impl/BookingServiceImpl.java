@@ -5,6 +5,7 @@ import com.example.hotelback.model.Booking;
 import com.example.hotelback.model.BookingStatus;
 import com.example.hotelback.repository.BookingRepository;
 import com.example.hotelback.service.BookingService;
+import com.example.hotelback.service.NotificationService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,9 +20,12 @@ import java.util.Optional;
 public class BookingServiceImpl implements BookingService {
 
     private final BookingRepository bookingRepository;
+    private final NotificationService notificationService;
 
-    public BookingServiceImpl(BookingRepository bookingRepository) {
+    public BookingServiceImpl(BookingRepository bookingRepository,
+                              NotificationService notificationService) {
         this.bookingRepository = bookingRepository;
+        this.notificationService = notificationService;
     }
 
     @Override
@@ -56,7 +60,10 @@ public class BookingServiceImpl implements BookingService {
 
         fillCalculatedFields(booking);
 
-        return bookingRepository.save(booking);
+        Booking saved = bookingRepository.save(booking);
+        notifyUser(saved, "BOOKING_CREATED", "Захиалга амжилттай үүслээ",
+                "Таны захиалга бүртгэгдлээ. Дугаар: " + saved.getBookingNumber());
+        return saved;
     }
 
     @Override
@@ -133,7 +140,10 @@ public class BookingServiceImpl implements BookingService {
         }
 
         booking.setStatus(BookingStatus.CONFIRMED);
-        return bookingRepository.save(booking);
+        Booking saved = bookingRepository.save(booking);
+        notifyUser(saved, "BOOKING_CONFIRMED", "Захиалга баталгаажлаа",
+                "Таны захиалга CONFIRMED төлөвт шилжлээ. Дугаар: " + saved.getBookingNumber());
+        return saved;
     }
 
     @Override
@@ -150,7 +160,17 @@ public class BookingServiceImpl implements BookingService {
         }
 
         booking.setStatus(BookingStatus.CANCELLED);
-        return bookingRepository.save(booking);
+        Booking saved = bookingRepository.save(booking);
+        notifyUser(saved, "BOOKING_CANCELLED", "Захиалга цуцлагдлаа",
+                "Таны захиалга CANCELLED төлөвт шилжлээ. Дугаар: " + saved.getBookingNumber());
+        return saved;
+    }
+
+    private void notifyUser(Booking booking, String type, String title, String message) {
+        if (booking.getUser() == null || booking.getUser().getId() == null) {
+            return;
+        }
+        notificationService.createNotification(booking.getUser().getId(), title, message, type);
     }
 
     private void validateDates(LocalDate checkin, LocalDate checkout) {
