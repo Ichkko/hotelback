@@ -7,6 +7,7 @@ import com.example.hotelback.model.Payment;
 import com.example.hotelback.model.PaymentStatus;
 import com.example.hotelback.repository.BookingRepository;
 import com.example.hotelback.repository.PaymentRepository;
+import com.example.hotelback.service.NotificationService;
 import com.example.hotelback.service.PaymentService;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
@@ -20,11 +21,14 @@ public class PaymentServiceImpl implements PaymentService {
 
     private final PaymentRepository paymentRepository;
     private final BookingRepository bookingRepository;
+    private final NotificationService notificationService;
 
     public PaymentServiceImpl(PaymentRepository paymentRepository,
-                              BookingRepository bookingRepository) {
+                              BookingRepository bookingRepository,
+                              NotificationService notificationService) {
         this.paymentRepository = paymentRepository;
         this.bookingRepository = bookingRepository;
+        this.notificationService = notificationService;
     }
 
     @Override
@@ -77,13 +81,25 @@ public class PaymentServiceImpl implements PaymentService {
 
         Payment saved = paymentRepository.save(payment);
 
+        notifyBookingUser(booking, "PAYMENT_SUCCESS", "Төлбөр амжилттай",
+                "Таны төлбөр амжилттай бүртгэгдлээ. Дүн: " + saved.getAmount());
+
         // Хэрэв бүрэн төлөгдсөн бол booking төлөвийг PAID болгох
         if (newTotalPaid.compareTo(expectedTotal) == 0) {
             booking.setStatus(BookingStatus.PAID);
             bookingRepository.save(booking);
+            notifyBookingUser(booking, "BOOKING_PAID", "Захиалга бүрэн төлөгдлөө",
+                    "Таны захиалга бүрэн төлөгдөж PAID төлөвт шилжлээ. Дугаар: " + booking.getBookingNumber());
         }
 
         return saved;
+    }
+
+    private void notifyBookingUser(Booking booking, String type, String title, String message) {
+        if (booking.getUser() == null || booking.getUser().getId() == null) {
+            return;
+        }
+        notificationService.createNotification(booking.getUser().getId(), title, message, type);
     }
 
     @Override
