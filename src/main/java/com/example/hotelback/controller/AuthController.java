@@ -46,12 +46,12 @@ public class AuthController {
         user.setEmail(request.getEmail());
         user.setPassword(passwordEncoder.encode(request.getPassword()));
         user.setPhone(request.getPhone());
-        user.setRole("USER");
+        user.setRole(resolveRole(request));
 
         userRepository.save(user);
 
         String token = jwtUtil.generateToken(user.getEmail(), user.getRole());
-        return ResponseEntity.ok(new AuthResponse(token, user.getEmail(), user.getName(), user.getRole()));
+        return ResponseEntity.ok(new AuthResponse(token, user.getId(), user.getEmail(), user.getName(), user.getRole()));
     }
 
     @PostMapping("/login")
@@ -68,6 +68,16 @@ public class AuthController {
                 .orElseThrow();
 
         String token = jwtUtil.generateToken(user.getEmail(), user.getRole());
-        return ResponseEntity.ok(new AuthResponse(token, user.getEmail(), user.getName(), user.getRole()));
+        return ResponseEntity.ok(new AuthResponse(token, user.getId(), user.getEmail(), user.getName(), user.getRole()));
     }
+    private String resolveRole(RegisterRequest request) {
+        String requestedRole = request.getRole() != null ? request.getRole() : request.getUserRole();
+        if (requestedRole == null) {
+            return "USER";
+        }
+
+        String normalizedRole = requestedRole.trim().toUpperCase();
+        return "ADMIN".equals(normalizedRole) ? "ADMIN" : "USER";
+    }
+
 }
