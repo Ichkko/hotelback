@@ -22,4 +22,8 @@ public class RegisterRequest {
     private String password;
 
     private String phone;
+
+    private String role;
+
+    private String userRole;
 }
