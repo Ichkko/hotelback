@@ -15,6 +15,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.time.LocalDate;
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -25,7 +26,7 @@ import java.util.List;
 public class Booking extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)
+    @JoinColumn(name = "user_id")
     @JsonIgnoreProperties({"hibernateLazyInitializer", "handler", "bookings"})
     private User user;
 
@@ -39,6 +40,39 @@ public class Booking extends BaseEntity {
 
     @Column(name = "checkout_date")
     private LocalDate checkoutDate;
+
+    @Column(name = "first_name", length = 100)
+    private String firstName;
+
+    @Column(name = "last_name", length = 100)
+    private String lastName;
+
+    @Column(name = "email", length = 150)
+    private String email;
+
+    @Column(name = "phone", length = 50)
+    private String phone;
+
+    @Column(name = "guest_count")
+    private Integer guestCount;
+
+    @Column(name = "special_requests", length = 2000)
+    private String specialRequests;
+
+    @Column(name = "nights")
+    private Integer nights;
+
+    @Column(name = "room_price", precision = 12, scale = 2)
+    private BigDecimal roomPrice;
+
+    @Column(name = "service_fee", precision = 12, scale = 2)
+    private BigDecimal serviceFee;
+
+    @Column(name = "total_price", precision = 12, scale = 2)
+    private BigDecimal totalPrice;
+
+    @Column(name = "booking_number", length = 120, unique = true)
+    private String bookingNumber;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", length = 50)
