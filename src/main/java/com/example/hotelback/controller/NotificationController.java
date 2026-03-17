@@ -1,16 +1,11 @@
 package com.example.hotelback.controller;
 
 import com.example.hotelback.dto.NotificationRequest;
-
 import com.example.hotelback.dto.NotificationResponse;
 import com.example.hotelback.model.Notification;
 import com.example.hotelback.service.NotificationService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
-
-import com.example.hotelback.model.Notification;
-import com.example.hotelback.service.NotificationService;
-
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -34,11 +29,7 @@ public class NotificationController {
     }
 
     @PostMapping
-
     public ResponseEntity<NotificationResponse> createNotification(@Valid @RequestBody NotificationRequest request) {
-
-    public ResponseEntity<Notification> createNotification(@RequestBody NotificationRequest request) {
-
         Notification notification = notificationService.createNotification(
                 request.getUserId(),
                 request.getTitle(),
@@ -56,14 +47,6 @@ public class NotificationController {
                 .map(NotificationResponse::fromEntity)
                 .toList();
         return ResponseEntity.ok(response);
-
-        return ResponseEntity.ok(notification);
-    }
-
-    @GetMapping("/user/{userId}")
-    public ResponseEntity<List<Notification>> getByUser(@PathVariable Long userId) {
-        return ResponseEntity.ok(notificationService.getNotificationsByUserId(userId));
-
     }
 
     @GetMapping("/user/{userId}/unread-count")
@@ -72,13 +55,8 @@ public class NotificationController {
     }
 
     @PostMapping("/{id}/read")
-
     public ResponseEntity<NotificationResponse> markAsRead(@PathVariable Long id) {
         return ResponseEntity.ok(NotificationResponse.fromEntity(notificationService.markAsRead(id)));
-
-    public ResponseEntity<Notification> markAsRead(@PathVariable Long id) {
-        return ResponseEntity.ok(notificationService.markAsRead(id));
-
     }
 
     @PostMapping("/user/{userId}/read-all")
@@ -87,14 +65,8 @@ public class NotificationController {
     }
 
     @DeleteMapping("/{id}")
-
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         notificationService.deleteNotification(id);
         return ResponseEntity.noContent().build();
-
-    public ResponseEntity<String> delete(@PathVariable Long id) {
-        notificationService.deleteNotification(id);
-        return ResponseEntity.ok("Мэдэгдэл устгагдлаа");
-
     }
 }
