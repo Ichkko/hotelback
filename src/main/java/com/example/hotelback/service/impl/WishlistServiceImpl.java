@@ -32,11 +32,7 @@ public class WishlistServiceImpl implements WishlistService {
     @Transactional
     public Wishlist addToWishlist(Long userId, Long roomId) {
         if (wishlistRepository.existsByUser_IdAndRoom_Id(userId, roomId)) {
-
             throw new IllegalStateException("Тухайн өрөө wishlist-д аль хэдийн нэмэгдсэн байна");
-
-            throw new IllegalArgumentException("Тухайн өрөө wishlist-д аль хэдийн нэмэгдсэн байна");
-
         }
 
         User user = userRepository.findById(userId)
