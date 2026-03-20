@@ -1,5 +1,6 @@
 package com.example.hotelback.controller;
 
+import com.example.hotelback.exception.GlobalExceptionHandler;
 import com.example.hotelback.model.User;
 import com.example.hotelback.repository.UserRepository;
 import com.example.hotelback.security.JwtUtil;
@@ -59,7 +60,9 @@ class AuthControllerTest {
                 jwtUtil
         );
 
-        mockMvc = MockMvcBuilders.standaloneSetup(authController).build();
+        mockMvc = MockMvcBuilders.standaloneSetup(authController)
+                .setControllerAdvice(new GlobalExceptionHandler())
+                .build();
     }
 
     @Test
@@ -110,7 +113,9 @@ class AuthControllerTest {
                                 "password", "secret123"
                         ))))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.message").value("Энэ email бүртгэлтэй байна"));
+                .andExpect(jsonPath("$.message").value("Энэ email бүртгэлтэй байна"))
+                .andExpect(jsonPath("$.code").value("INVALID_REQUEST"))
+                .andExpect(jsonPath("$.path").value("/api/auth/register"));
 
         verify(userRepository, never()).save(any(User.class));
     }
@@ -127,7 +132,9 @@ class AuthControllerTest {
                                 "password", "wrong-pass"
                         ))))
                 .andExpect(status().isUnauthorized())
-                .andExpect(jsonPath("$.message").value("Email эсвэл нууц үг буруу"));
+                .andExpect(jsonPath("$.message").value("Email эсвэл нууц үг буруу"))
+                .andExpect(jsonPath("$.code").value("AUTH_INVALID_CREDENTIALS"))
+                .andExpect(jsonPath("$.path").value("/api/auth/login"));
     }
 
     @Test
