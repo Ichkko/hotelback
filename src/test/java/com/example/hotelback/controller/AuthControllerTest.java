@@ -12,6 +12,8 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
@@ -22,6 +24,7 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -91,5 +94,64 @@ class AuthControllerTest {
         assertThat(savedUser.getRole()).isEqualTo("USER");
         assertThat(savedUser.getPassword()).isEqualTo("encoded-secret");
         verify(jwtUtil).generateToken(eq("admin-request@example.com"), eq("USER"));
+    }
+
+    @Test
+    void registerReturnsBadRequestWhenEmailAlreadyExists() throws Exception {
+        User existing = new User();
+        existing.setId(1L);
+        when(userRepository.findByEmail("duplicate@example.com")).thenReturn(Optional.of(existing));
+
+        mockMvc.perform(post("/api/auth/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(Map.of(
+                                "name", "Existing User",
+                                "email", "duplicate@example.com",
+                                "password", "secret123"
+                        ))))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("Энэ email бүртгэлтэй байна"));
+
+        verify(userRepository, never()).save(any(User.class));
+    }
+
+    @Test
+    void loginReturnsUnauthorizedForBadCredentials() throws Exception {
+        when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
+                .thenThrow(new BadCredentialsException("bad credentials"));
+
+        mockMvc.perform(post("/api/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(Map.of(
+                                "email", "bad@example.com",
+                                "password", "wrong-pass"
+                        ))))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.message").value("Email эсвэл нууц үг буруу"));
+    }
+
+    @Test
+    void loginReturnsTokenForValidCredentials() throws Exception {
+        User user = new User();
+        user.setId(21L);
+        user.setEmail("user@example.com");
+        user.setName("Valid User");
+        user.setRole("USER");
+
+        when(userRepository.findByEmail("user@example.com")).thenReturn(Optional.of(user));
+        when(jwtUtil.generateToken("user@example.com", "USER")).thenReturn("token-123");
+
+        mockMvc.perform(post("/api/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(Map.of(
+                                "email", "user@example.com",
+                                "password", "secret123"
+                        ))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.token").value("token-123"))
+                .andExpect(jsonPath("$.userId").value(21L))
+                .andExpect(jsonPath("$.role").value("USER"));
+
+        verify(authenticationManager).authenticate(any(UsernamePasswordAuthenticationToken.class));
     }
 }
