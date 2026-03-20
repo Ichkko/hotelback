@@ -1,7 +1,11 @@
 package com.example.hotelback.controller;
 
-import com.example.hotelback.model.Room;
+import com.example.hotelback.dto.CreateRoomRequest;
+import com.example.hotelback.dto.RoomResponse;
+import com.example.hotelback.dto.UpdateRoomRequest;
+import com.example.hotelback.mapper.DtoMapper;
 import com.example.hotelback.service.RoomService;
+import jakarta.validation.Valid;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -14,45 +18,48 @@ import java.util.List;
 public class RoomController {
 
     private final RoomService roomService;
+    private final DtoMapper dtoMapper;
 
-    public RoomController(RoomService roomService) {
+    public RoomController(RoomService roomService, DtoMapper dtoMapper) {
         this.roomService = roomService;
+        this.dtoMapper = dtoMapper;
     }
 
     @PostMapping
-    public ResponseEntity<Room> createRoom(@RequestBody Room room) {
-        return ResponseEntity.ok(roomService.createRoom(room));
+    public ResponseEntity<RoomResponse> createRoom(@Valid @RequestBody CreateRoomRequest request) {
+        return ResponseEntity.ok(dtoMapper.toRoomResponse(roomService.createRoom(dtoMapper.toRoom(request))));
     }
 
     @GetMapping
-    public ResponseEntity<List<Room>> getAllRooms() {
-        return ResponseEntity.ok(roomService.getAllRooms());
+    public ResponseEntity<List<RoomResponse>> getAllRooms() {
+        return ResponseEntity.ok(roomService.getAllRooms().stream().map(dtoMapper::toRoomResponse).toList());
     }
 
     @GetMapping("/hotel/{hotelId}")
-    public ResponseEntity<List<Room>> getRoomsByHotel(@PathVariable Long hotelId) {
-        return ResponseEntity.ok(roomService.getRoomsByHotelId(hotelId));
+    public ResponseEntity<List<RoomResponse>> getRoomsByHotel(@PathVariable Long hotelId) {
+        return ResponseEntity.ok(roomService.getRoomsByHotelId(hotelId).stream().map(dtoMapper::toRoomResponse).toList());
     }
 
     @GetMapping("/hotel/{hotelId}/available")
-    public ResponseEntity<List<Room>> getAvailableRooms(
+    public ResponseEntity<List<RoomResponse>> getAvailableRooms(
             @PathVariable Long hotelId,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate checkin,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate checkout
     ) {
-        return ResponseEntity.ok(roomService.getAvailableRooms(hotelId, checkin, checkout));
+        return ResponseEntity.ok(roomService.getAvailableRooms(hotelId, checkin, checkout).stream().map(dtoMapper::toRoomResponse).toList());
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Room> getRoomById(@PathVariable Long id) {
+    public ResponseEntity<RoomResponse> getRoomById(@PathVariable Long id) {
         return roomService.getRoomById(id)
+                .map(dtoMapper::toRoomResponse)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Room> updateRoom(@PathVariable Long id, @RequestBody Room room) {
-        return ResponseEntity.ok(roomService.updateRoom(id, room));
+    public ResponseEntity<RoomResponse> updateRoom(@PathVariable Long id, @Valid @RequestBody UpdateRoomRequest request) {
+        return ResponseEntity.ok(dtoMapper.toRoomResponse(roomService.updateRoom(id, dtoMapper.toRoom(request))));
     }
 
     @DeleteMapping("/{id}")
