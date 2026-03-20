@@ -1,7 +1,11 @@
 package com.example.hotelback.controller;
 
-import com.example.hotelback.model.Booking;
+import com.example.hotelback.dto.BookingResponse;
+import com.example.hotelback.dto.CreateBookingRequest;
+import com.example.hotelback.dto.UpdateBookingRequest;
+import com.example.hotelback.mapper.DtoMapper;
 import com.example.hotelback.service.BookingService;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -12,46 +16,49 @@ import java.util.List;
 public class BookingController {
 
     private final BookingService bookingService;
+    private final DtoMapper dtoMapper;
 
-    public BookingController(BookingService bookingService) {
+    public BookingController(BookingService bookingService, DtoMapper dtoMapper) {
         this.bookingService = bookingService;
+        this.dtoMapper = dtoMapper;
     }
 
     @PostMapping
-    public ResponseEntity<Booking> createBooking(@RequestBody Booking booking) {
-        return ResponseEntity.ok(bookingService.createBooking(booking));
+    public ResponseEntity<BookingResponse> createBooking(@Valid @RequestBody CreateBookingRequest request) {
+        return ResponseEntity.ok(dtoMapper.toBookingResponse(bookingService.createBooking(dtoMapper.toBooking(request))));
     }
 
     @GetMapping
-    public ResponseEntity<List<Booking>> getAllBookings() {
-        return ResponseEntity.ok(bookingService.getAllBookings());
+    public ResponseEntity<List<BookingResponse>> getAllBookings() {
+        return ResponseEntity.ok(bookingService.getAllBookings().stream().map(dtoMapper::toBookingResponse).toList());
     }
 
     @GetMapping("/user/{userId}")
-    public ResponseEntity<List<Booking>> getBookingsByUser(@PathVariable Long userId) {
-        return ResponseEntity.ok(bookingService.getBookingsByUserId(userId));
+    public ResponseEntity<List<BookingResponse>> getBookingsByUser(@PathVariable Long userId) {
+        return ResponseEntity.ok(bookingService.getBookingsByUserId(userId).stream().map(dtoMapper::toBookingResponse).toList());
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Booking> getBookingById(@PathVariable Long id) {
+    public ResponseEntity<BookingResponse> getBookingById(@PathVariable Long id) {
         return bookingService.getBookingById(id)
+                .map(dtoMapper::toBookingResponse)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Booking> updateBooking(@PathVariable Long id, @RequestBody Booking booking) {
-        return ResponseEntity.ok(bookingService.updateBooking(id, booking));
+    public ResponseEntity<BookingResponse> updateBooking(@PathVariable Long id, @Valid @RequestBody UpdateBookingRequest request) {
+        return ResponseEntity.ok(dtoMapper.toBookingResponse(bookingService.updateBooking(id, dtoMapper.toBooking(request))));
     }
 
     @PostMapping("/{id}/confirm")
-    public ResponseEntity<Booking> confirmBooking(@PathVariable Long id) {
-        return ResponseEntity.ok(bookingService.confirmBooking(id));
+    public ResponseEntity<BookingResponse> confirmBooking(@PathVariable Long id) {
+        return ResponseEntity.ok(dtoMapper.toBookingResponse(bookingService.confirmBooking(id)));
     }
 
     @PostMapping("/{id}/cancel")
-    public ResponseEntity<Booking> cancelBooking(@PathVariable Long id) {
-        return ResponseEntity.ok(bookingService.cancelBooking(id));
+    public ResponseEntity<BookingResponse> cancelBooking(@PathVariable Long id) {
+        return ResponseEntity.ok(dtoMapper.toBookingResponse(bookingService.cancelBooking(id)));
     }
 
     @DeleteMapping("/{id}")
