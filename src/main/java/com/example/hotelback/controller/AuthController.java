@@ -3,6 +3,9 @@ package com.example.hotelback.controller;
 import com.example.hotelback.dto.AuthResponse;
 import com.example.hotelback.dto.LoginRequest;
 import com.example.hotelback.dto.RegisterRequest;
+import com.example.hotelback.exception.BadRequestException;
+import com.example.hotelback.exception.ErrorCode;
+import com.example.hotelback.exception.UnauthorizedException;
 import com.example.hotelback.model.User;
 import com.example.hotelback.repository.UserRepository;
 import com.example.hotelback.security.JwtUtil;
@@ -14,7 +17,6 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -38,7 +40,7 @@ public class AuthController {
     @PostMapping("/register")
     public ResponseEntity<?> register(@Valid @RequestBody RegisterRequest request) {
         if (userRepository.findByEmail(request.getEmail()).isPresent()) {
-            return ResponseEntity.badRequest().body(Map.of("message", "Энэ email бүртгэлтэй байна"));
+            throw new BadRequestException(ErrorCode.INVALID_REQUEST, "Энэ email бүртгэлтэй байна");
         }
 
         User user = new User();
@@ -61,7 +63,7 @@ public class AuthController {
                     new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
             );
         } catch (BadCredentialsException e) {
-            return ResponseEntity.status(401).body(Map.of("message", "Email эсвэл нууц үг буруу"));
+            throw new UnauthorizedException(ErrorCode.AUTH_INVALID_CREDENTIALS, "Email эсвэл нууц үг буруу");
         }
 
         User user = userRepository.findByEmail(request.getEmail())
