@@ -46,7 +46,7 @@ public class AuthController {
         user.setEmail(request.getEmail());
         user.setPassword(passwordEncoder.encode(request.getPassword()));
         user.setPhone(request.getPhone());
-        user.setRole(resolveRole(request));
+        user.setRole("USER");
 
         userRepository.save(user);
 
@@ -70,14 +70,4 @@ public class AuthController {
         String token = jwtUtil.generateToken(user.getEmail(), user.getRole());
         return ResponseEntity.ok(new AuthResponse(token, user.getId(), user.getEmail(), user.getName(), user.getRole()));
     }
-    private String resolveRole(RegisterRequest request) {
-        String requestedRole = request.getRole() != null ? request.getRole() : request.getUserRole();
-        if (requestedRole == null) {
-            return "USER";
-        }
-
-        String normalizedRole = requestedRole.trim().toUpperCase();
-        return "ADMIN".equals(normalizedRole) ? "ADMIN" : "USER";
-    }
-
 }
