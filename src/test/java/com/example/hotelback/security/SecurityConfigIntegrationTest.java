@@ -8,9 +8,10 @@ import com.example.hotelback.model.Booking;
 import com.example.hotelback.model.BookingStatus;
 import com.example.hotelback.model.Hotel;
 import com.example.hotelback.model.User;
- 
+ import com.example.hotelback.security.OwnershipAccessService;
+  
 import com.example.hotelback.security.OwnershipAccessService;
- 
+  
 import com.example.hotelback.repository.UserRepository;
 import com.example.hotelback.service.BookingService;
 import com.example.hotelback.service.HotelService;
@@ -57,6 +58,17 @@ class SecurityConfigIntegrationTest {
     private JwtAuthenticationFilter jwtAuthenticationFilter;
 
     @MockBean
+
+    private JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
+
+    @MockBean
+    private TokenBlacklistService tokenBlacklistService;
+
+    @MockBean
+    private LoginAttemptService loginAttemptService;
+
+    @MockBean
+
     private AuthenticationManager authenticationManager;
 
     @MockBean
@@ -68,7 +80,10 @@ class SecurityConfigIntegrationTest {
     @MockBean
     private JwtUtil jwtUtil;
 
- 
+ @MockBean
+    private OwnershipAccessService ownershipAccessService;
+
+
     @MockBean
     private OwnershipAccessService ownershipAccessService;
  
@@ -87,6 +102,9 @@ class SecurityConfigIntegrationTest {
             saved.setId(user.getId());
             return saved;
         });
+
+        when(jwtUtil.generateAccessToken("public@example.com", "USER")).thenReturn("public-token");
+        when(jwtUtil.generateRefreshToken("public@example.com", "USER")).thenReturn("public-refresh-token");
         when(jwtUtil.generateToken("public@example.com", "USER")).thenReturn("public-token");
 
         mockMvc.perform(post("/api/auth/register")
@@ -99,7 +117,10 @@ class SecurityConfigIntegrationTest {
                                 }
                                 """))
                 .andExpect(status().isOk())
+               .andExpect(jsonPath("$.token").value("public-token"))
+                .andExpect(jsonPath("$.refreshToken").value("public-refresh-token"));
                 .andExpect(jsonPath("$.token").value("public-token"));
+
     }
 
     @Test
@@ -119,8 +140,19 @@ class SecurityConfigIntegrationTest {
     @Test
     @WithMockUser(roles = "USER")
     void authenticatedUserCanAccessProtectedEndpoint() throws Exception {
+        when(ownershipAccessService.isAdmin(org.mockito.ArgumentMatchers.any())).thenReturn(false);
+        when(ownershipAccessService.resolveCurrentUserId(org.mockito.ArgumentMatchers.any())).thenReturn(1L);
+
+        Booking booking = new Booking();
+        booking.setId(1L);
+        booking.setCheckinDate(LocalDate.now().plusDays(1));
+        booking.setCheckoutDate(LocalDate.now().plusDays(2));
+        booking.setStatus(BookingStatus.NEW);
+        when(bookingService.getBookingsByUserId(1L)).thenReturn(List.of(booking));
+
          when(ownershipAccessService.isAdmin(org.mockito.ArgumentMatchers.any())).thenReturn(false);
         when(ownershipAccessService.resolveCurrentUserId(org.mockito.ArgumentMatchers.any())).thenReturn(1L);
+
 
          Booking booking = new Booking();
         booking.setId(1L);
