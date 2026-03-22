@@ -4,6 +4,7 @@ import com.example.hotelback.exception.ResourceNotFoundException;
 import com.example.hotelback.model.Booking;
 import com.example.hotelback.model.BookingStatus;
 import com.example.hotelback.repository.BookingRepository;
+import com.example.hotelback.repository.RoomRepository;
 import com.example.hotelback.service.BookingService;
 import com.example.hotelback.service.NotificationService;
 import org.springframework.stereotype.Service;
@@ -20,11 +21,14 @@ import java.util.Optional;
 public class BookingServiceImpl implements BookingService {
 
     private final BookingRepository bookingRepository;
+    private final RoomRepository roomRepository;
     private final NotificationService notificationService;
 
     public BookingServiceImpl(BookingRepository bookingRepository,
+                              RoomRepository roomRepository,
                               NotificationService notificationService) {
         this.bookingRepository = bookingRepository;
+        this.roomRepository = roomRepository;
         this.notificationService = notificationService;
     }
 
@@ -32,11 +36,16 @@ public class BookingServiceImpl implements BookingService {
     @Transactional
     public Booking createBooking(Booking booking) {
         validateDates(booking.getCheckinDate(), booking.getCheckoutDate());
-        validateGuestCount(booking);
+        validateGuestCount(booking.getGuestCount());
 
         if (booking.getRoom() == null || booking.getRoom().getId() == null) {
             throw new IllegalArgumentException("Өрөөний мэдээлэл дутуу байна");
         }
+
+        booking.setRoom(roomRepository.findById(booking.getRoom().getId())
+                .orElseThrow(() -> new ResourceNotFoundException("Өрөө олдсонгүй: ID=" + booking.getRoom().getId())));
+
+        validateRoomCapacity(booking);
 
         if (booking.getRoom().getPrice() == null) {
             throw new IllegalArgumentException("Өрөөний үнэ дутуу байна");
@@ -88,7 +97,8 @@ public class BookingServiceImpl implements BookingService {
                 .orElseThrow(() -> new ResourceNotFoundException("Захиалга олдсонгүй: ID=" + id));
 
         validateDates(booking.getCheckinDate(), booking.getCheckoutDate());
-        validateGuestCount(booking);
+        validateGuestCount(booking.getGuestCount());
+        validateRoomCapacity(existing.getRoom(), booking.getGuestCount());
 
         // Шинэ огноонууд өөр booking-үүдтэй давхцаж байгаа эсэхийг шалгах
         List<Booking> overlaps = bookingRepository.findOverlappingBookings(
@@ -185,13 +195,19 @@ public class BookingServiceImpl implements BookingService {
         }
     }
 
-    private void validateGuestCount(Booking booking) {
-        if (booking.getGuestCount() == null || booking.getGuestCount() < 1) {
+    private void validateGuestCount(Integer guestCount) {
+        if (guestCount == null || guestCount < 1) {
             throw new IllegalArgumentException("Зочдын тоо 1-ээс багагүй байх ёстой");
         }
+    }
 
-        Integer capacity = booking.getRoom() != null ? booking.getRoom().getCapacity() : null;
-        if (capacity != null && booking.getGuestCount() > capacity) {
+    private void validateRoomCapacity(Booking booking) {
+        validateRoomCapacity(booking.getRoom(), booking.getGuestCount());
+    }
+
+    private void validateRoomCapacity(com.example.hotelback.model.Room room, Integer guestCount) {
+        Integer capacity = room != null ? room.getCapacity() : null;
+        if (capacity != null && guestCount != null && guestCount > capacity) {
             throw new IllegalArgumentException("Зочдын тоо өрөөний багтаамжаас хэтэрсэн байна");
         }
     }

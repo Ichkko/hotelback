@@ -6,6 +6,7 @@ import com.example.hotelback.model.Hotel;
 import com.example.hotelback.model.Room;
 import com.example.hotelback.model.User;
 import com.example.hotelback.repository.BookingRepository;
+import com.example.hotelback.repository.RoomRepository;
 import com.example.hotelback.service.NotificationService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -36,6 +37,9 @@ class BookingServiceImplTest {
     private BookingRepository bookingRepository;
 
     @Mock
+    private RoomRepository roomRepository;
+
+    @Mock
     private NotificationService notificationService;
 
     @InjectMocks
@@ -64,6 +68,7 @@ class BookingServiceImplTest {
     @Test
     void createBookingRejectsOverlappingBooking() {
         Booking booking = validBooking();
+        when(roomRepository.findById(7L)).thenReturn(Optional.of(room));
         when(bookingRepository.findOverlappingBookings(anyLong(), any(), any(), anyList()))
                 .thenReturn(List.of(new Booking()));
 
@@ -115,6 +120,38 @@ class BookingServiceImplTest {
     }
 
     @Test
+    void createBookingLoadsRoomDetailsByRoomId() {
+        Booking booking = validBooking();
+        Room detachedRoom = new Room();
+        detachedRoom.setId(7L);
+        booking.setRoom(detachedRoom);
+
+        when(roomRepository.findById(7L)).thenReturn(Optional.of(room));
+        when(bookingRepository.findOverlappingBookings(anyLong(), any(), any(), anyList()))
+                .thenReturn(List.of());
+        when(bookingRepository.save(any(Booking.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        Booking saved = bookingService.createBooking(booking);
+
+        assertThat(saved.getRoom()).isSameAs(room);
+        assertThat(saved.getRoomPrice()).isEqualByComparingTo("100.0");
+    }
+
+    @Test
+    void createBookingRejectsUnknownRoomId() {
+        Booking booking = validBooking();
+        Room detachedRoom = new Room();
+        detachedRoom.setId(404L);
+        booking.setRoom(detachedRoom);
+
+        when(roomRepository.findById(404L)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> bookingService.createBooking(booking))
+                .isInstanceOf(com.example.hotelback.exception.ResourceNotFoundException.class)
+                .hasMessageContaining("Өрөө олдсонгүй: ID=404");
+    }
+
+    @Test
     void confirmBookingTransitionsNewToConfirmed() {
         Booking booking = validBooking();
         booking.setId(1L);
@@ -146,6 +183,7 @@ class BookingServiceImplTest {
     @Test
     void createBookingCalculatesFieldsAndDefaultsStatusToNew() {
         Booking booking = validBooking();
+        when(roomRepository.findById(7L)).thenReturn(Optional.of(room));
         when(bookingRepository.findOverlappingBookings(anyLong(), any(), any(), anyList()))
                 .thenReturn(List.of());
         when(bookingRepository.save(any(Booking.class))).thenAnswer(invocation -> invocation.getArgument(0));
