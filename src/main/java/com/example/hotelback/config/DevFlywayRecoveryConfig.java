@@ -1,10 +1,14 @@
 package com.example.hotelback.config;
 
+
 import org.flywaydb.core.api.exception.FlywayValidateException;
 import org.flywaydb.core.api.output.ValidateResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+
+import org.flywaydb.core.api.FlywayException;
+
 import org.springframework.boot.autoconfigure.flyway.FlywayMigrationStrategy;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -12,6 +16,7 @@ import org.springframework.context.annotation.Profile;
 
 @Configuration
 @Profile("dev")
+
 @ConditionalOnProperty(
         prefix = "app.flyway",
         name = "repair-on-validation-error",
@@ -22,14 +27,24 @@ public class DevFlywayRecoveryConfig {
 
     private static final Logger log = LoggerFactory.getLogger(DevFlywayRecoveryConfig.class);
 
+
+public class DevFlywayRecoveryConfig {
+
+
     @Bean
     public FlywayMigrationStrategy devFlywayMigrationStrategy() {
         return flyway -> {
             try {
                 flyway.migrate();
+
             } catch (FlywayValidateException ex) {
                 if (containsFailedMigration(ex)) {
                     log.warn("Flyway validation failed because a migration is marked as failed. Repairing schema history and retrying once in the dev profile.");
+
+            } catch (FlywayException ex) {
+                String message = ex.getMessage();
+                if (message != null && message.contains("Migrations have failed validation")) {
+
                     flyway.repair();
                     flyway.migrate();
                     return;
@@ -39,10 +54,12 @@ public class DevFlywayRecoveryConfig {
         };
     }
 
+
     private boolean containsFailedMigration(FlywayValidateException ex) {
         ValidateResult validateResult = ex.getValidateResult();
         return validateResult != null
                 && validateResult.getAllErrorMessages() != null
                 && validateResult.getAllErrorMessages().contains("Detected failed migration");
     }
+
 }
