@@ -42,3 +42,15 @@ await api.notifications.create({
   type: "BOOKING",
 });
 ```
+
+
+## Нэмэлт баримт бичиг
+
+- `docs/frontend/requirements.md`: Frontend багт өгөх албан requirement document.
+
+- `docs/frontend/contract-package/README.md`: Frontend integration-д зориулсан contract package overview.
+- `docs/frontend/contract-package/openapi.yaml`: OpenAPI contract.
+- `docs/frontend/contract-package/examples.md`: Request/response example багц.
+- `docs/frontend/contract-package/role-ownership-matrix.md`: Role ба ownership matrix.
+- `docs/frontend/contract-package/env-matrix.md`: Dev/Staging/Prod environment matrix.
+- `docs/frontend/contract-package/hotelback-postman-collection.json`: Postman collection.
