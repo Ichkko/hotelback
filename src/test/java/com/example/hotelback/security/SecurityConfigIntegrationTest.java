@@ -8,10 +8,6 @@ import com.example.hotelback.model.Booking;
 import com.example.hotelback.model.BookingStatus;
 import com.example.hotelback.model.Hotel;
 import com.example.hotelback.model.User;
- import com.example.hotelback.security.OwnershipAccessService;
-  
-import com.example.hotelback.security.OwnershipAccessService;
-  
 import com.example.hotelback.repository.UserRepository;
 import com.example.hotelback.service.BookingService;
 import com.example.hotelback.service.HotelService;
@@ -58,7 +54,6 @@ class SecurityConfigIntegrationTest {
     private JwtAuthenticationFilter jwtAuthenticationFilter;
 
     @MockBean
-
     private JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
 
     @MockBean
@@ -68,7 +63,6 @@ class SecurityConfigIntegrationTest {
     private LoginAttemptService loginAttemptService;
 
     @MockBean
-
     private AuthenticationManager authenticationManager;
 
     @MockBean
@@ -80,13 +74,9 @@ class SecurityConfigIntegrationTest {
     @MockBean
     private JwtUtil jwtUtil;
 
- @MockBean
-    private OwnershipAccessService ownershipAccessService;
-
-
     @MockBean
     private OwnershipAccessService ownershipAccessService;
- 
+
     @Test
     void authEndpointsRemainPublic() throws Exception {
         User user = new User();
@@ -117,10 +107,8 @@ class SecurityConfigIntegrationTest {
                                 }
                                 """))
                 .andExpect(status().isOk())
-               .andExpect(jsonPath("$.token").value("public-token"))
+                .andExpect(jsonPath("$.token").value("public-token"))
                 .andExpect(jsonPath("$.refreshToken").value("public-refresh-token"));
-                .andExpect(jsonPath("$.token").value("public-token"));
-
     }
 
     @Test
@@ -140,8 +128,8 @@ class SecurityConfigIntegrationTest {
     @Test
     @WithMockUser(roles = "USER")
     void authenticatedUserCanAccessProtectedEndpoint() throws Exception {
-        when(ownershipAccessService.isAdmin(org.mockito.ArgumentMatchers.any())).thenReturn(false);
-        when(ownershipAccessService.resolveCurrentUserId(org.mockito.ArgumentMatchers.any())).thenReturn(1L);
+        when(ownershipAccessService.isAdmin(any())).thenReturn(false);
+        when(ownershipAccessService.resolveCurrentUserId(any())).thenReturn(1L);
 
         Booking booking = new Booking();
         booking.setId(1L);
@@ -149,19 +137,8 @@ class SecurityConfigIntegrationTest {
         booking.setCheckoutDate(LocalDate.now().plusDays(2));
         booking.setStatus(BookingStatus.NEW);
         when(bookingService.getBookingsByUserId(1L)).thenReturn(List.of(booking));
+        when(bookingService.getAllBookings()).thenReturn(List.of(booking));
 
-         when(ownershipAccessService.isAdmin(org.mockito.ArgumentMatchers.any())).thenReturn(false);
-        when(ownershipAccessService.resolveCurrentUserId(org.mockito.ArgumentMatchers.any())).thenReturn(1L);
-
-
-         Booking booking = new Booking();
-        booking.setId(1L);
-        booking.setCheckinDate(LocalDate.now().plusDays(1));
-        booking.setCheckoutDate(LocalDate.now().plusDays(2));
-        booking.setStatus(BookingStatus.NEW);
-         when(bookingService.getBookingsByUserId(1L)).thenReturn(List.of(booking));
-         when(bookingService.getAllBookings()).thenReturn(List.of(booking));
- 
         mockMvc.perform(get("/api/bookings"))
                 .andExpect(status().isOk());
     }
