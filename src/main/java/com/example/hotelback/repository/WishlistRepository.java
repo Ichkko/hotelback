@@ -15,4 +15,8 @@ public interface WishlistRepository extends JpaRepository<Wishlist, Long> {
     Optional<Wishlist> findByUser_IdAndRoom_Id(Long userId, Long roomId);
 
     boolean existsByUser_IdAndRoom_Id(Long userId, Long roomId);
+
+    @org.springframework.data.jpa.repository.Query("select w.user.id from Wishlist w where w.id = :id")
+    Optional<Long> findUserIdById(@org.springframework.data.repository.query.Param("id") Long id);
+
 }
