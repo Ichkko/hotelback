@@ -3,7 +3,9 @@ package com.example.hotelback.service.impl;
 import com.example.hotelback.exception.ResourceNotFoundException;
 import com.example.hotelback.model.Booking;
 import com.example.hotelback.model.BookingStatus;
+import com.example.hotelback.model.Room;
 import com.example.hotelback.repository.BookingRepository;
+import com.example.hotelback.repository.RoomRepository;
 import com.example.hotelback.service.BookingService;
 import com.example.hotelback.service.NotificationService;
 import org.springframework.stereotype.Service;
@@ -20,11 +22,14 @@ import java.util.Optional;
 public class BookingServiceImpl implements BookingService {
 
     private final BookingRepository bookingRepository;
+    private final RoomRepository roomRepository;
     private final NotificationService notificationService;
 
     public BookingServiceImpl(BookingRepository bookingRepository,
+                              RoomRepository roomRepository,
                               NotificationService notificationService) {
         this.bookingRepository = bookingRepository;
+        this.roomRepository = roomRepository;
         this.notificationService = notificationService;
     }
 
@@ -32,13 +37,12 @@ public class BookingServiceImpl implements BookingService {
     @Transactional
     public Booking createBooking(Booking booking) {
         validateDates(booking.getCheckinDate(), booking.getCheckoutDate());
+
+        Room room = requireRoom(booking);
+        booking.setRoom(room);
         validateGuestCount(booking);
 
-        if (booking.getRoom() == null || booking.getRoom().getId() == null) {
-            throw new IllegalArgumentException("Өрөөний мэдээлэл дутуу байна");
-        }
-
-        if (booking.getRoom().getPrice() == null) {
+        if (room.getPrice() == null) {
             throw new IllegalArgumentException("Өрөөний үнэ дутуу байна");
         }
 
@@ -164,6 +168,15 @@ public class BookingServiceImpl implements BookingService {
         notifyUser(saved, "BOOKING_CANCELLED", "Захиалга цуцлагдлаа",
                 "Таны захиалга CANCELLED төлөвт шилжлээ. Дугаар: " + saved.getBookingNumber());
         return saved;
+    }
+
+    private Room requireRoom(Booking booking) {
+        if (booking.getRoom() == null || booking.getRoom().getId() == null) {
+            throw new IllegalArgumentException("Өрөөний мэдээлэл дутуу байна");
+        }
+
+        return roomRepository.findById(booking.getRoom().getId())
+                .orElseThrow(() -> new ResourceNotFoundException("Өрөө олдсонгүй: ID=" + booking.getRoom().getId()));
     }
 
     private void notifyUser(Booking booking, String type, String title, String message) {
