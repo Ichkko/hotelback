@@ -35,8 +35,6 @@ public class WishlistServiceImpl implements WishlistService {
 
             throw new IllegalStateException("Тухайн өрөө wishlist-д аль хэдийн нэмэгдсэн байна");
 
-            throw new IllegalArgumentException("Тухайн өрөө wishlist-д аль хэдийн нэмэгдсэн байна");
-
         }
 
         User user = userRepository.findById(userId)
