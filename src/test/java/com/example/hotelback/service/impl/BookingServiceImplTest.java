@@ -6,6 +6,7 @@ import com.example.hotelback.model.Hotel;
 import com.example.hotelback.model.Room;
 import com.example.hotelback.model.User;
 import com.example.hotelback.repository.BookingRepository;
+import com.example.hotelback.repository.RoomRepository;
 import com.example.hotelback.service.NotificationService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -36,6 +37,9 @@ class BookingServiceImplTest {
     private BookingRepository bookingRepository;
 
     @Mock
+    private RoomRepository roomRepository;
+
+    @Mock
     private NotificationService notificationService;
 
     @InjectMocks
@@ -64,6 +68,7 @@ class BookingServiceImplTest {
     @Test
     void createBookingRejectsOverlappingBooking() {
         Booking booking = validBooking();
+        when(roomRepository.findById(7L)).thenReturn(Optional.of(room));
         when(bookingRepository.findOverlappingBookings(anyLong(), any(), any(), anyList()))
                 .thenReturn(List.of(new Booking()));
 
@@ -108,10 +113,44 @@ class BookingServiceImplTest {
     void createBookingRejectsGuestCountAboveRoomCapacity() {
         Booking booking = validBooking();
         booking.setGuestCount(3);
+        when(roomRepository.findById(7L)).thenReturn(Optional.of(room));
 
         assertThatThrownBy(() -> bookingService.createBooking(booking))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("багтаамжаас хэтэрсэн");
+    }
+
+
+    @Test
+    void createBookingLoadsRoomPriceFromRepositoryWhenRequestOnlyContainsRoomId() {
+        Booking booking = validBooking();
+        Room requestRoom = new Room();
+        requestRoom.setId(room.getId());
+        booking.setRoom(requestRoom);
+
+        when(roomRepository.findById(room.getId())).thenReturn(Optional.of(room));
+        when(bookingRepository.findOverlappingBookings(anyLong(), any(), any(), anyList()))
+                .thenReturn(List.of());
+        when(bookingRepository.save(any(Booking.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        Booking saved = bookingService.createBooking(booking);
+
+        assertThat(saved.getRoom()).isSameAs(room);
+        assertThat(saved.getRoomPrice()).isEqualByComparingTo("100.0");
+    }
+
+    @Test
+    void createBookingRejectsUnknownRoomId() {
+        Booking booking = validBooking();
+        Room requestRoom = new Room();
+        requestRoom.setId(999L);
+        booking.setRoom(requestRoom);
+
+        when(roomRepository.findById(999L)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> bookingService.createBooking(booking))
+                .isInstanceOf(com.example.hotelback.exception.ResourceNotFoundException.class)
+                .hasMessageContaining("Өрөө олдсонгүй");
     }
 
     @Test
@@ -146,6 +185,7 @@ class BookingServiceImplTest {
     @Test
     void createBookingCalculatesFieldsAndDefaultsStatusToNew() {
         Booking booking = validBooking();
+        when(roomRepository.findById(7L)).thenReturn(Optional.of(room));
         when(bookingRepository.findOverlappingBookings(anyLong(), any(), any(), anyList()))
                 .thenReturn(List.of());
         when(bookingRepository.save(any(Booking.class))).thenAnswer(invocation -> invocation.getArgument(0));

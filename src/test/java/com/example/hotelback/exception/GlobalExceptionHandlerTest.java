@@ -1,6 +1,7 @@
 package com.example.hotelback.exception;
 
 import com.example.hotelback.dto.RegisterRequest;
+import com.example.hotelback.model.BookingStatus;
 import jakarta.validation.Valid;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -47,6 +48,21 @@ class GlobalExceptionHandlerTest {
     }
 
     @Test
+    void invalidEnumJsonReturnsBadRequest() throws Exception {
+        mockMvc.perform(post("/test/json")
+                        .contentType(APPLICATION_JSON)
+                        .header("X-Trace-Id", "trace-json")
+                        .content("{\"status\":\"DONE\"}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value(400))
+                .andExpect(jsonPath("$.error").value("Bad Request"))
+                .andExpect(jsonPath("$.code").value("INVALID_REQUEST"))
+                .andExpect(jsonPath("$.message").value("Хүсэлтийн JSON өгөгдөл буруу байна"))
+                .andExpect(jsonPath("$.path").value("/test/json"))
+                .andExpect(jsonPath("$.traceId").value("trace-json"));
+    }
+
+    @Test
     void internalServerErrorDoesNotExposeExceptionDetails() throws Exception {
         mockMvc.perform(get("/test/error"))
                 .andExpect(status().isInternalServerError())
@@ -64,6 +80,11 @@ class GlobalExceptionHandlerTest {
     @RequestMapping("/test")
     static class TestController {
 
+        @PostMapping("/json")
+        ResponseEntity<Void> json(@RequestBody JsonEnumRequest request) {
+            return ResponseEntity.ok().build();
+        }
+
         @PostMapping("/validation")
         ResponseEntity<Void> validate(@Valid @RequestBody RegisterRequest request) {
             return ResponseEntity.ok().build();
@@ -72,6 +93,18 @@ class GlobalExceptionHandlerTest {
         @GetMapping("/error")
         ResponseEntity<Void> error() {
             throw new RuntimeException("sensitive details");
+        }
+    }
+
+    static class JsonEnumRequest {
+        private BookingStatus status;
+
+        public BookingStatus getStatus() {
+            return status;
+        }
+
+        public void setStatus(BookingStatus status) {
+            this.status = status;
         }
     }
 }
