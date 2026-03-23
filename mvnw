@@ -155,6 +155,11 @@ if [ -d "$MAVEN_HOME" ]; then
   exec_maven "$@"
 fi
 
+if command -v "$MVN_CMD" >/dev/null 2>&1; then
+  verbose "using installed $MVN_CMD from PATH"
+  exec "$MVN_CMD" "$@"
+fi
+
 case "${distributionUrl-}" in
 *?-bin.zip | *?maven-mvnd-?*-?*.zip) ;;
 *) die "distributionUrl is not valid, must match *-bin.zip or maven-mvnd-*.zip, but found '${distributionUrl-}'" ;;
