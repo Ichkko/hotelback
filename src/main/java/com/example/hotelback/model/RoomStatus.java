@@ -20,4 +20,17 @@ public enum RoomStatus {
                 .findFirst()
                 .orElseThrow(() -> new IllegalArgumentException("Invalid room status: " + value));
     }
+
+    public static RoomStatus fromDatabaseValue(String value) {
+        if (value == null || value.isBlank()) {
+            return null;
+        }
+
+        String normalizedValue = value.trim();
+        if ("BOOKED".equalsIgnoreCase(normalizedValue)) {
+            return UNAVAILABLE;
+        }
+
+        return fromValue(normalizedValue);
+    }
 }

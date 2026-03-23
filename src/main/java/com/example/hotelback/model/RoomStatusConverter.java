@@ -13,6 +13,6 @@ public class RoomStatusConverter implements AttributeConverter<RoomStatus, Strin
 
     @Override
     public RoomStatus convertToEntityAttribute(String dbData) {
-        return RoomStatus.fromValue(dbData);
+        return RoomStatus.fromDatabaseValue(dbData);
     }
 }
