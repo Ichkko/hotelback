@@ -4,6 +4,8 @@ import com.example.hotelback.model.RoomStatus;
 import lombok.Builder;
 import lombok.Getter;
 
+import java.util.List;
+
 @Getter
 @Builder
 public class RoomResponse {
@@ -13,4 +15,5 @@ public class RoomResponse {
     private Double price;
     private Integer capacity;
     private RoomStatus status;
+    private List<RoomDetailResponse> details;
 }
