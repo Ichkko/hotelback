@@ -54,6 +54,9 @@ public class RoomServiceImpl implements RoomService {
             detail.setRoom(existing);
             existing.getDetails().add(detail);
         }
+
+        existing.setRoomDetails(room.getRoomDetails());
+
         return roomRepository.save(existing);
     }
 

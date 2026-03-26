@@ -62,13 +62,20 @@ public class DtoMapper {
         Hotel hotel = new Hotel();
         hotel.setId(request.getHotelId());
         room.setHotel(hotel);
+
         applyRoomFields(room, request.getRoomType(), request.getPrice(), request.getCapacity(), request.getStatus(), request.getDetails());
+
+        applyRoomFields(room, request.getRoomType(), request.getPrice(), request.getCapacity(), request.getStatus(), request.getRoomDetails());
+
         return room;
     }
 
     public Room toRoom(UpdateRoomRequest request) {
         Room room = new Room();
         applyRoomFields(room, request.getRoomType(), request.getPrice(), request.getCapacity(), request.getStatus(), request.getDetails());
+
+        applyRoomFields(room, request.getRoomType(), request.getPrice(), request.getCapacity(), request.getStatus(), request.getRoomDetails());
+
         return room;
     }
 
@@ -93,7 +100,10 @@ public class DtoMapper {
                 .price(room.getPrice())
                 .capacity(room.getCapacity())
                 .status(room.getStatus())
-                .details(room.getDetails().stream().map(this::toRoomDetailResponse).toList())
+         .details(room.getDetails().stream().map(this::toRoomDetailResponse).toList())
+
+                .roomDetails(room.getRoomDetails())
+
                 .build();
     }
 
@@ -198,6 +208,9 @@ public class DtoMapper {
     }
 
     private void applyRoomFields(Room room, String roomType, Double price, Integer capacity, RoomStatus status, java.util.List<RoomDetailRequest> details) {
+
+    private void applyRoomFields(Room room, String roomType, Double price, Integer capacity, RoomStatus status, String roomDetails) {
+
         room.setRoomType(roomType);
         room.setPrice(price);
         room.setCapacity(capacity);
@@ -216,5 +229,8 @@ public class DtoMapper {
                 fallbackOrder++;
             }
         }
+
+        room.setRoomDetails(roomDetails);
+
     }
 }

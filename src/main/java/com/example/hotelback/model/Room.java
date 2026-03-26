@@ -41,6 +41,9 @@ public class Room extends BaseEntity {
     @Column(name = "capacity")
     private Integer capacity;
 
+    @Column(name = "room_details", length = 2000)
+    private String roomDetails;
+
     @Convert(converter = RoomStatusConverter.class)
     @Column(name = "status")
     private RoomStatus status;

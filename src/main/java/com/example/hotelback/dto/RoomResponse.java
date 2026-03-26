@@ -15,5 +15,9 @@ public class RoomResponse {
     private Double price;
     private Integer capacity;
     private RoomStatus status;
+
     private List<RoomDetailResponse> details;
+
+    private String roomDetails;
+
 }
