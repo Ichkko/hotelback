@@ -20,7 +20,7 @@ public class DevFlywayRepairConfig {
         try {
             flyway.migrate();
         } catch (FlywayException exception) {
-            if (!isChecksumMismatch(exception)) {
+            if (!isRepairableValidationFailure(exception)) {
                 throw exception;
             }
 
@@ -29,11 +29,13 @@ public class DevFlywayRepairConfig {
         }
     }
 
-    private boolean isChecksumMismatch(Throwable throwable) {
+    private boolean isRepairableValidationFailure(Throwable throwable) {
         Throwable current = throwable;
         while (current != null) {
             String message = current.getMessage();
-            if (message != null && message.contains("Migration checksum mismatch")) {
+            if (message != null && (
+                    message.contains("Migration checksum mismatch")
+                            || message.contains("Detected failed migration to version"))) {
                 return true;
             }
             current = current.getCause();
