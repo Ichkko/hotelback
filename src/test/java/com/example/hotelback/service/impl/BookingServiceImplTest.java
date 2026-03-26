@@ -27,6 +27,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -68,7 +69,7 @@ class BookingServiceImplTest {
     @Test
     void createBookingRejectsOverlappingBooking() {
         Booking booking = validBooking();
-        when(roomRepository.findById(7L)).thenReturn(Optional.of(room));
+        when(roomRepository.findByIdForUpdate(7L)).thenReturn(Optional.of(room));
         when(bookingRepository.findOverlappingBookings(anyLong(), any(), any(), anyList()))
                 .thenReturn(List.of(new Booking()));
 
@@ -113,7 +114,7 @@ class BookingServiceImplTest {
     void createBookingRejectsGuestCountAboveRoomCapacity() {
         Booking booking = validBooking();
         booking.setGuestCount(3);
-        when(roomRepository.findById(7L)).thenReturn(Optional.of(room));
+        when(roomRepository.findByIdForUpdate(7L)).thenReturn(Optional.of(room));
 
         assertThatThrownBy(() -> bookingService.createBooking(booking))
                 .isInstanceOf(IllegalArgumentException.class)
@@ -128,7 +129,7 @@ class BookingServiceImplTest {
         requestRoom.setId(room.getId());
         booking.setRoom(requestRoom);
 
-        when(roomRepository.findById(room.getId())).thenReturn(Optional.of(room));
+        when(roomRepository.findByIdForUpdate(room.getId())).thenReturn(Optional.of(room));
         when(bookingRepository.findOverlappingBookings(anyLong(), any(), any(), anyList()))
                 .thenReturn(List.of());
         when(bookingRepository.save(any(Booking.class))).thenAnswer(invocation -> invocation.getArgument(0));
@@ -146,7 +147,7 @@ class BookingServiceImplTest {
         requestRoom.setId(999L);
         booking.setRoom(requestRoom);
 
-        when(roomRepository.findById(999L)).thenReturn(Optional.empty());
+        when(roomRepository.findByIdForUpdate(999L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> bookingService.createBooking(booking))
                 .isInstanceOf(com.example.hotelback.exception.ResourceNotFoundException.class)
@@ -185,7 +186,7 @@ class BookingServiceImplTest {
     @Test
     void createBookingCalculatesFieldsAndDefaultsStatusToNew() {
         Booking booking = validBooking();
-        when(roomRepository.findById(7L)).thenReturn(Optional.of(room));
+        when(roomRepository.findByIdForUpdate(7L)).thenReturn(Optional.of(room));
         when(bookingRepository.findOverlappingBookings(anyLong(), any(), any(), anyList()))
                 .thenReturn(List.of());
         when(bookingRepository.save(any(Booking.class))).thenAnswer(invocation -> invocation.getArgument(0));
@@ -204,6 +205,19 @@ class BookingServiceImplTest {
         assertThat(bookingCaptor.getValue().getStatus()).isEqualTo(BookingStatus.NEW);
         verify(notificationService).createNotification(15L, "Захиалга амжилттай үүслээ",
                 "Таны захиалга бүртгэгдлээ. Дугаар: " + saved.getBookingNumber(), "BOOKING_CREATED");
+    }
+
+    @Test
+    void createBookingLocksRoomBeforeOverlapCheck() {
+        Booking booking = validBooking();
+        when(roomRepository.findByIdForUpdate(7L)).thenReturn(Optional.of(room));
+        when(bookingRepository.findOverlappingBookings(anyLong(), any(), any(), anyList()))
+                .thenReturn(List.of());
+        when(bookingRepository.save(any(Booking.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        bookingService.createBooking(booking);
+
+        verify(roomRepository, times(1)).findByIdForUpdate(7L);
     }
 
     private Booking validBooking() {
