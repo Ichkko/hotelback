@@ -51,6 +51,9 @@ public class Room extends BaseEntity {
     @OneToMany(mappedBy = "room", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<RoomImage> roomImages = new ArrayList<>();
 
+    @OneToMany(mappedBy = "room", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<RoomDetail> details = new ArrayList<>();
+
     @JsonIgnore
     @OneToMany(mappedBy = "room")
     private List<Booking> bookings = new ArrayList<>();

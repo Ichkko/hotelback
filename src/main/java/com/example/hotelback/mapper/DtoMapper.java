@@ -62,13 +62,20 @@ public class DtoMapper {
         Hotel hotel = new Hotel();
         hotel.setId(request.getHotelId());
         room.setHotel(hotel);
+
+        applyRoomFields(room, request.getRoomType(), request.getPrice(), request.getCapacity(), request.getStatus(), request.getDetails());
+
         applyRoomFields(room, request.getRoomType(), request.getPrice(), request.getCapacity(), request.getStatus(), request.getRoomDetails());
+
         return room;
     }
 
     public Room toRoom(UpdateRoomRequest request) {
         Room room = new Room();
+        applyRoomFields(room, request.getRoomType(), request.getPrice(), request.getCapacity(), request.getStatus(), request.getDetails());
+
         applyRoomFields(room, request.getRoomType(), request.getPrice(), request.getCapacity(), request.getStatus(), request.getRoomDetails());
+
         return room;
     }
 
@@ -93,7 +100,10 @@ public class DtoMapper {
                 .price(room.getPrice())
                 .capacity(room.getCapacity())
                 .status(room.getStatus())
+         .details(room.getDetails().stream().map(this::toRoomDetailResponse).toList())
+
                 .roomDetails(room.getRoomDetails())
+
                 .build();
     }
 
@@ -143,6 +153,26 @@ public class DtoMapper {
                 .build();
     }
 
+
+    public RoomDetail toRoomDetail(RoomDetailRequest request) {
+        RoomDetail detail = new RoomDetail();
+        detail.setCategory(request.getCategory());
+        detail.setLabel(request.getLabel());
+        detail.setValue(request.getValue());
+        detail.setDisplayOrder(request.getDisplayOrder());
+        return detail;
+    }
+
+    public RoomDetailResponse toRoomDetailResponse(RoomDetail detail) {
+        return RoomDetailResponse.builder()
+                .id(detail.getId())
+                .category(detail.getCategory())
+                .label(detail.getLabel())
+                .value(detail.getValue())
+                .displayOrder(detail.getDisplayOrder())
+                .build();
+    }
+
     private void applyBookingFields(Booking booking,
                                     java.time.LocalDate checkinDate,
                                     java.time.LocalDate checkoutDate,
@@ -177,11 +207,30 @@ public class DtoMapper {
         hotel.setCoverImageUrl(coverImageUrl);
     }
 
+    private void applyRoomFields(Room room, String roomType, Double price, Integer capacity, RoomStatus status, java.util.List<RoomDetailRequest> details) {
+
     private void applyRoomFields(Room room, String roomType, Double price, Integer capacity, RoomStatus status, String roomDetails) {
+
         room.setRoomType(roomType);
         room.setPrice(price);
         room.setCapacity(capacity);
         room.setStatus(status);
+
+        room.getDetails().clear();
+        if (details != null) {
+            int fallbackOrder = 0;
+            for (RoomDetailRequest detailRequest : details) {
+                RoomDetail detail = toRoomDetail(detailRequest);
+                if (detail.getDisplayOrder() == null) {
+                    detail.setDisplayOrder(fallbackOrder);
+                }
+                detail.setRoom(room);
+                room.getDetails().add(detail);
+                fallbackOrder++;
+            }
+        }
+
         room.setRoomDetails(roomDetails);
+
     }
 }
