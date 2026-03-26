@@ -38,7 +38,7 @@ public class BookingServiceImpl implements BookingService {
     public Booking createBooking(Booking booking) {
         validateDates(booking.getCheckinDate(), booking.getCheckoutDate());
 
-        Room room = requireRoom(booking);
+        Room room = requireRoomForUpdate(booking);
         booking.setRoom(room);
         validateGuestCount(booking);
 
@@ -90,6 +90,8 @@ public class BookingServiceImpl implements BookingService {
     public Booking updateBooking(Long id, Booking booking) {
         Booking existing = bookingRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Захиалга олдсонгүй: ID=" + id));
+        roomRepository.findByIdForUpdate(existing.getRoom().getId())
+                .orElseThrow(() -> new ResourceNotFoundException("Өрөө олдсонгүй: ID=" + existing.getRoom().getId()));
 
         validateDates(booking.getCheckinDate(), booking.getCheckoutDate());
         validateGuestCount(booking);
@@ -170,12 +172,12 @@ public class BookingServiceImpl implements BookingService {
         return saved;
     }
 
-    private Room requireRoom(Booking booking) {
+    private Room requireRoomForUpdate(Booking booking) {
         if (booking.getRoom() == null || booking.getRoom().getId() == null) {
             throw new IllegalArgumentException("Өрөөний мэдээлэл дутуу байна");
         }
 
-        return roomRepository.findById(booking.getRoom().getId())
+        return roomRepository.findByIdForUpdate(booking.getRoom().getId())
                 .orElseThrow(() -> new ResourceNotFoundException("Өрөө олдсонгүй: ID=" + booking.getRoom().getId()));
     }
 

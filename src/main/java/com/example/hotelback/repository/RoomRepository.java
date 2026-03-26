@@ -3,12 +3,15 @@ package com.example.hotelback.repository;
 import com.example.hotelback.model.BookingStatus;
 import com.example.hotelback.model.Room;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import jakarta.persistence.LockModeType;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface RoomRepository extends JpaRepository<Room, Long> {
@@ -48,4 +51,8 @@ public interface RoomRepository extends JpaRepository<Room, Long> {
             @Param("newCheckout") LocalDate newCheckout,
             @Param("statuses") List<BookingStatus> statuses
     );
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("select r from Room r where r.id = :id")
+    Optional<Room> findByIdForUpdate(@Param("id") Long id);
 }
