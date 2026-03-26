@@ -1,14 +1,30 @@
-ALTER TABLE payments
-    ALTER COLUMN amount SET NOT NULL;
+UPDATE payments
+SET amount = 0.01
+WHERE amount IS NULL;
+
+UPDATE payments
+SET payment_method = 'UNKNOWN'
+WHERE payment_method IS NULL;
+
+UPDATE payments
+SET status = 'PENDING'
+WHERE status IS NULL;
+
+UPDATE bookings
+SET status = 'NEW'
+WHERE status IS NULL;
 
 ALTER TABLE payments
-    ALTER COLUMN payment_method SET NOT NULL;
+    MODIFY COLUMN amount DECIMAL(10, 2) NOT NULL;
 
 ALTER TABLE payments
-    ALTER COLUMN status SET NOT NULL;
+    MODIFY COLUMN payment_method VARCHAR(50) NOT NULL;
+
+ALTER TABLE payments
+    MODIFY COLUMN status VARCHAR(50) NOT NULL;
 
 ALTER TABLE bookings
-    ALTER COLUMN status SET NOT NULL;
+    MODIFY COLUMN status VARCHAR(50) NOT NULL;
 
 ALTER TABLE payments
     ADD CONSTRAINT chk_payments_amount_positive
