@@ -62,13 +62,13 @@ public class DtoMapper {
         Hotel hotel = new Hotel();
         hotel.setId(request.getHotelId());
         room.setHotel(hotel);
-        applyRoomFields(room, request.getRoomType(), request.getPrice(), request.getCapacity(), request.getStatus());
+        applyRoomFields(room, request.getRoomType(), request.getPrice(), request.getCapacity(), request.getStatus(), request.getRoomDetails());
         return room;
     }
 
     public Room toRoom(UpdateRoomRequest request) {
         Room room = new Room();
-        applyRoomFields(room, request.getRoomType(), request.getPrice(), request.getCapacity(), request.getStatus());
+        applyRoomFields(room, request.getRoomType(), request.getPrice(), request.getCapacity(), request.getStatus(), request.getRoomDetails());
         return room;
     }
 
@@ -93,6 +93,7 @@ public class DtoMapper {
                 .price(room.getPrice())
                 .capacity(room.getCapacity())
                 .status(room.getStatus())
+                .roomDetails(room.getRoomDetails())
                 .build();
     }
 
@@ -176,10 +177,11 @@ public class DtoMapper {
         hotel.setCoverImageUrl(coverImageUrl);
     }
 
-    private void applyRoomFields(Room room, String roomType, Double price, Integer capacity, RoomStatus status) {
+    private void applyRoomFields(Room room, String roomType, Double price, Integer capacity, RoomStatus status, String roomDetails) {
         room.setRoomType(roomType);
         room.setPrice(price);
         room.setCapacity(capacity);
         room.setStatus(status);
+        room.setRoomDetails(roomDetails);
     }
 }
