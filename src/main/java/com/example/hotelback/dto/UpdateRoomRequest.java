@@ -5,6 +5,7 @@ import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.PositiveOrZero;
+import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -25,4 +26,7 @@ public class UpdateRoomRequest {
 
     @NotNull(message = "Өрөөний төлөв заавал өгнө")
     private RoomStatus status;
+
+    @Size(max = 2000, message = "Өрөөний мэдээлэл 2000 тэмдэгтээс ихгүй байна")
+    private String roomDetails;
 }

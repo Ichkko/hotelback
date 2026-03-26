@@ -13,4 +13,5 @@ public class RoomResponse {
     private Double price;
     private Integer capacity;
     private RoomStatus status;
+    private String roomDetails;
 }
