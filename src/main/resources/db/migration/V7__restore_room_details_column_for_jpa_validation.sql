@@ -1,2 +1,0 @@
-ALTER TABLE rooms
-    ADD COLUMN IF NOT EXISTS room_details VARCHAR(2000);
