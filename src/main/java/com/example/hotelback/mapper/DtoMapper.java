@@ -47,6 +47,11 @@ public class DtoMapper {
         Hotel hotel = new Hotel();
         applyHotelFields(hotel, request.getName(), request.getAddress(), request.getAimag(), request.getPhone(),
                 request.getDescription(), request.getStartingPrice(), request.getCoverImageUrl());
+        if (request.getOwnerId() != null) {
+            User owner = new User();
+            owner.setId(request.getOwnerId());
+            hotel.setOwner(owner);
+        }
         return hotel;
     }
 
@@ -87,6 +92,7 @@ public class DtoMapper {
                 .description(hotel.getDescription())
                 .startingPrice(hotel.getStartingPrice())
                 .coverImageUrl(hotel.getCoverImageUrl())
+                .ownerId(hotel.getOwnerId())
                 .build();
     }
 
