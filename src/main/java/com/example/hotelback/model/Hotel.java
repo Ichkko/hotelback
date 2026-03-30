@@ -1,10 +1,15 @@
 package com.example.hotelback.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;
 import lombok.Setter;
@@ -39,6 +44,16 @@ public class Hotel extends BaseEntity {
 
     @Column(name = "cover_image_url", length = 255)
     private String coverImageUrl;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "owner_id")
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
+    private User owner;
+
+    @Transient
+    public Long getOwnerId() {
+        return owner != null ? owner.getId() : null;
+    }
 
     @JsonIgnore
     @OneToMany(mappedBy = "hotel")

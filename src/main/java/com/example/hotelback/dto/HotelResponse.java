@@ -14,4 +14,5 @@ public class HotelResponse {
     private String description;
     private Double startingPrice;
     private String coverImageUrl;
+    private Long ownerId;
 }
