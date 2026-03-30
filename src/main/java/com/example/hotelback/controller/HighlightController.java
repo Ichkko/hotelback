@@ -1,8 +1,11 @@
 package com.example.hotelback.controller;
 
 import com.example.hotelback.model.Highlight;
+import com.example.hotelback.security.OwnershipAccessService;
 import com.example.hotelback.service.HighlightService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -12,13 +15,18 @@ import java.util.List;
 public class HighlightController {
 
     private final HighlightService highlightService;
+    private final OwnershipAccessService ownershipAccessService;
 
-    public HighlightController(HighlightService highlightService) {
+    public HighlightController(HighlightService highlightService,
+                               OwnershipAccessService ownershipAccessService) {
         this.highlightService = highlightService;
+        this.ownershipAccessService = ownershipAccessService;
     }
 
     @PostMapping
-    public ResponseEntity<Highlight> createHighlight(@RequestBody Highlight highlight) {
+    public ResponseEntity<Highlight> createHighlight(@RequestBody Highlight highlight,
+                                                     @AuthenticationPrincipal UserDetails principal) {
+        ownershipAccessService.assertHotelOwnerOrAdmin(highlight.getHotelId(), principal);
         return ResponseEntity.ok(highlightService.createHighlight(highlight));
     }
 
@@ -35,12 +43,17 @@ public class HighlightController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Highlight> updateHighlight(@PathVariable Long id, @RequestBody Highlight highlight) {
+    public ResponseEntity<Highlight> updateHighlight(@PathVariable Long id,
+                                                     @RequestBody Highlight highlight,
+                                                     @AuthenticationPrincipal UserDetails principal) {
+        ownershipAccessService.assertHighlightHotelOwnerOrAdmin(id, principal);
         return ResponseEntity.ok(highlightService.updateHighlight(id, highlight));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<String> deleteHighlight(@PathVariable Long id) {
+    public ResponseEntity<String> deleteHighlight(@PathVariable Long id,
+                                                  @AuthenticationPrincipal UserDetails principal) {
+        ownershipAccessService.assertHighlightHotelOwnerOrAdmin(id, principal);
         highlightService.deleteHighlightById(id);
         return ResponseEntity.ok("Highlight with ID " + id + " deleted successfully");
     }

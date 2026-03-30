@@ -41,6 +41,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         // Нээлттэй endpoint-ууд
                         .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/hotels/my").authenticated()
                         .requestMatchers(HttpMethod.GET, "/api/hotels/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/rooms/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/room-images/**").permitAll()
@@ -48,18 +49,18 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/highlights/**").permitAll()
 
                         // ADMIN зөвхөн
-                        .requestMatchers(HttpMethod.POST, "/api/hotels/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.PUT, "/api/hotels/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.DELETE, "/api/hotels/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.POST, "/api/rooms/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.PUT, "/api/rooms/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.DELETE, "/api/rooms/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.POST, "/api/amenities/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.PUT, "/api/amenities/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.DELETE, "/api/amenities/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.POST, "/api/highlights/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.PUT, "/api/highlights/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.DELETE, "/api/highlights/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/api/hotels/**").hasAnyRole("ADMIN", "OWNER")
+                        .requestMatchers(HttpMethod.PUT, "/api/hotels/**").hasAnyRole("ADMIN", "OWNER")
+                        .requestMatchers(HttpMethod.DELETE, "/api/hotels/**").hasAnyRole("ADMIN", "OWNER")
+                        .requestMatchers(HttpMethod.POST, "/api/rooms/**").hasAnyRole("ADMIN", "OWNER")
+                        .requestMatchers(HttpMethod.PUT, "/api/rooms/**").hasAnyRole("ADMIN", "OWNER")
+                        .requestMatchers(HttpMethod.DELETE, "/api/rooms/**").hasAnyRole("ADMIN", "OWNER")
+                        .requestMatchers(HttpMethod.POST, "/api/amenities/**").hasAnyRole("ADMIN", "OWNER")
+                        .requestMatchers(HttpMethod.PUT, "/api/amenities/**").hasAnyRole("ADMIN", "OWNER")
+                        .requestMatchers(HttpMethod.DELETE, "/api/amenities/**").hasAnyRole("ADMIN", "OWNER")
+                        .requestMatchers(HttpMethod.POST, "/api/highlights/**").hasAnyRole("ADMIN", "OWNER")
+                        .requestMatchers(HttpMethod.PUT, "/api/highlights/**").hasAnyRole("ADMIN", "OWNER")
+                        .requestMatchers(HttpMethod.DELETE, "/api/highlights/**").hasAnyRole("ADMIN", "OWNER")
                         .requestMatchers("/api/users/**").hasRole("ADMIN")
 
                         // Бусад бүх endpoint нэвтэрсэн хэрэглэгч шаардана

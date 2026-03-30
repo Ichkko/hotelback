@@ -4,8 +4,12 @@ import com.example.hotelback.exception.ErrorCode;
 import com.example.hotelback.exception.ForbiddenException;
 import com.example.hotelback.exception.ResourceNotFoundException;
 import com.example.hotelback.exception.UnauthorizedException;
+import com.example.hotelback.repository.AmenityRepository;
 import com.example.hotelback.repository.BookingRepository;
+import com.example.hotelback.repository.HighlightRepository;
+import com.example.hotelback.repository.HotelRepository;
 import com.example.hotelback.repository.NotificationRepository;
+import com.example.hotelback.repository.RoomRepository;
 import com.example.hotelback.repository.UserRepository;
 import com.example.hotelback.repository.WishlistRepository;
 import org.springframework.security.core.GrantedAuthority;
@@ -19,15 +23,27 @@ public class OwnershipAccessService {
     private final BookingRepository bookingRepository;
     private final NotificationRepository notificationRepository;
     private final WishlistRepository wishlistRepository;
+    private final HotelRepository hotelRepository;
+    private final RoomRepository roomRepository;
+    private final AmenityRepository amenityRepository;
+    private final HighlightRepository highlightRepository;
 
     public OwnershipAccessService(UserRepository userRepository,
                                   BookingRepository bookingRepository,
                                   NotificationRepository notificationRepository,
-                                  WishlistRepository wishlistRepository) {
+                                  WishlistRepository wishlistRepository,
+                                  HotelRepository hotelRepository,
+                                  RoomRepository roomRepository,
+                                  AmenityRepository amenityRepository,
+                                  HighlightRepository highlightRepository) {
         this.userRepository = userRepository;
         this.bookingRepository = bookingRepository;
         this.notificationRepository = notificationRepository;
         this.wishlistRepository = wishlistRepository;
+        this.hotelRepository = hotelRepository;
+        this.roomRepository = roomRepository;
+        this.amenityRepository = amenityRepository;
+        this.highlightRepository = highlightRepository;
     }
 
     public Long resolveCurrentUserId(UserDetails principal) {
@@ -91,6 +107,62 @@ public class OwnershipAccessService {
                 .orElseThrow(() -> new ResourceNotFoundException("Wishlist бичлэг олдсонгүй: ID=" + wishlistId));
         if (!currentUserId.equals(ownerId)) {
             throw new ForbiddenException(ErrorCode.FORBIDDEN, "Та зөвхөн өөрийн wishlist-д хандах эрхтэй");
+        }
+    }
+
+    public void assertHotelOwnerOrAdmin(Long hotelId, UserDetails principal) {
+        if (isAdmin(principal)) {
+            return;
+        }
+
+        Long currentUserId = resolveCurrentUserId(principal);
+        Long ownerId = hotelRepository.findOwnerIdById(hotelId)
+                .orElseThrow(() -> new ResourceNotFoundException("Зочид буудал олдсонгүй: ID=" + hotelId));
+
+        if (ownerId == null || !currentUserId.equals(ownerId)) {
+            throw new ForbiddenException(ErrorCode.FORBIDDEN, "Та зөвхөн өөрийн буудлыг удирдах эрхтэй");
+        }
+    }
+
+    public void assertRoomHotelOwnerOrAdmin(Long roomId, UserDetails principal) {
+        if (isAdmin(principal)) {
+            return;
+        }
+
+        Long currentUserId = resolveCurrentUserId(principal);
+        Long ownerId = roomRepository.findHotelOwnerIdByRoomId(roomId)
+                .orElseThrow(() -> new ResourceNotFoundException("Өрөө олдсонгүй: ID=" + roomId));
+
+        if (ownerId == null || !currentUserId.equals(ownerId)) {
+            throw new ForbiddenException(ErrorCode.FORBIDDEN, "Та зөвхөн өөрийн буудлын өрөөг удирдах эрхтэй");
+        }
+    }
+
+    public void assertAmenityHotelOwnerOrAdmin(Long amenityId, UserDetails principal) {
+        if (isAdmin(principal)) {
+            return;
+        }
+
+        Long currentUserId = resolveCurrentUserId(principal);
+        Long ownerId = amenityRepository.findHotelOwnerIdByAmenityId(amenityId)
+                .orElseThrow(() -> new ResourceNotFoundException("Amenity олдсонгүй: ID=" + amenityId));
+
+        if (ownerId == null || !currentUserId.equals(ownerId)) {
+            throw new ForbiddenException(ErrorCode.FORBIDDEN, "Та зөвхөн өөрийн буудлын amenity-г удирдах эрхтэй");
+        }
+    }
+
+    public void assertHighlightHotelOwnerOrAdmin(Long highlightId, UserDetails principal) {
+        if (isAdmin(principal)) {
+            return;
+        }
+
+        Long currentUserId = resolveCurrentUserId(principal);
+        Long ownerId = highlightRepository.findHotelOwnerIdByHighlightId(highlightId)
+                .orElseThrow(() -> new ResourceNotFoundException("Highlight олдсонгүй: ID=" + highlightId));
+
+        if (ownerId == null || !currentUserId.equals(ownerId)) {
+            throw new ForbiddenException(ErrorCode.FORBIDDEN, "Та зөвхөн өөрийн буудлын highlight-ыг удирдах эрхтэй");
         }
     }
 

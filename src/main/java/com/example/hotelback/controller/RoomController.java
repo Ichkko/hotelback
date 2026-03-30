@@ -4,10 +4,13 @@ import com.example.hotelback.dto.CreateRoomRequest;
 import com.example.hotelback.dto.RoomResponse;
 import com.example.hotelback.dto.UpdateRoomRequest;
 import com.example.hotelback.mapper.DtoMapper;
+import com.example.hotelback.security.OwnershipAccessService;
 import com.example.hotelback.service.RoomService;
 import jakarta.validation.Valid;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
@@ -19,14 +22,20 @@ public class RoomController {
 
     private final RoomService roomService;
     private final DtoMapper dtoMapper;
+    private final OwnershipAccessService ownershipAccessService;
 
-    public RoomController(RoomService roomService, DtoMapper dtoMapper) {
+    public RoomController(RoomService roomService,
+                          DtoMapper dtoMapper,
+                          OwnershipAccessService ownershipAccessService) {
         this.roomService = roomService;
         this.dtoMapper = dtoMapper;
+        this.ownershipAccessService = ownershipAccessService;
     }
 
     @PostMapping
-    public ResponseEntity<RoomResponse> createRoom(@Valid @RequestBody CreateRoomRequest request) {
+    public ResponseEntity<RoomResponse> createRoom(@Valid @RequestBody CreateRoomRequest request,
+                                                   @AuthenticationPrincipal UserDetails principal) {
+        ownershipAccessService.assertHotelOwnerOrAdmin(request.getHotelId(), principal);
         return ResponseEntity.ok(dtoMapper.toRoomResponse(roomService.createRoom(dtoMapper.toRoom(request))));
     }
 
@@ -58,12 +67,17 @@ public class RoomController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<RoomResponse> updateRoom(@PathVariable Long id, @Valid @RequestBody UpdateRoomRequest request) {
+    public ResponseEntity<RoomResponse> updateRoom(@PathVariable Long id,
+                                                   @Valid @RequestBody UpdateRoomRequest request,
+                                                   @AuthenticationPrincipal UserDetails principal) {
+        ownershipAccessService.assertRoomHotelOwnerOrAdmin(id, principal);
         return ResponseEntity.ok(dtoMapper.toRoomResponse(roomService.updateRoom(id, dtoMapper.toRoom(request))));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<String> deleteRoom(@PathVariable Long id) {
+    public ResponseEntity<String> deleteRoom(@PathVariable Long id,
+                                             @AuthenticationPrincipal UserDetails principal) {
+        ownershipAccessService.assertRoomHotelOwnerOrAdmin(id, principal);
         roomService.deleteRoomById(id);
         return ResponseEntity.ok("Өрөө устгагдлаа");
     }
