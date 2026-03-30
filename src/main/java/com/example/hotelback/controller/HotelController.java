@@ -74,6 +74,17 @@ public class HotelController {
         return ResponseEntity.ok(hotelService.getAllHotels().stream().map(dtoMapper::toHotelResponse).toList());
     }
 
+    @GetMapping("/my")
+    public ResponseEntity<List<HotelResponse>> getMyHotels(@AuthenticationPrincipal UserDetails principal) {
+        if (ownershipAccessService.isAdmin(principal)) {
+            return ResponseEntity.ok(hotelService.getAllHotels().stream().map(dtoMapper::toHotelResponse).toList());
+        }
+
+        Long currentUserId = ownershipAccessService.resolveCurrentUserId(principal);
+        return ResponseEntity.ok(hotelService.getHotelsByOwnerId(currentUserId)
+                .stream().map(dtoMapper::toHotelResponse).toList());
+    }
+
     @GetMapping("/search")
     public ResponseEntity<List<HotelResponse>> searchHotels(@RequestParam String name) {
         return ResponseEntity.ok(hotelService.searchHotelsByName(name).stream().map(dtoMapper::toHotelResponse).toList());

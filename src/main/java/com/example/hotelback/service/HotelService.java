@@ -13,6 +13,8 @@ public interface HotelService {
 
     List<Hotel> getAllHotels();
 
+    List<Hotel> getHotelsByOwnerId(Long ownerId);
+
     Optional<Hotel> getHotelById(Long id);
 
     Hotel updateHotel(Hotel hotel);
