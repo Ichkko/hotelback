@@ -11,6 +11,6 @@ import java.util.Optional;
 @Repository
 public interface HighlightRepository extends JpaRepository<Highlight, Long> {
 
-    @Query("select h.hotel.owner.id from Highlight h where h.id = :highlightId")
-    Optional<Long> findHotelOwnerIdByHighlightId(@Param("highlightId") Long highlightId);
+    @Query("select h.hotel.id from Highlight h where h.id = :highlightId")
+    Optional<Long> findHotelIdByHighlightId(@Param("highlightId") Long highlightId);
 }

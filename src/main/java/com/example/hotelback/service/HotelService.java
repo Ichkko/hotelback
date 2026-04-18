@@ -7,13 +7,13 @@ import java.util.Optional;
 
 public interface HotelService {
 
-    Hotel createHotel(Hotel hotel);
+    Hotel createHotel(Hotel hotel, Long ownerUserId);
 
-    List<Hotel> createHotels(List<Hotel> hotels);
+    List<Hotel> createHotels(List<Hotel> hotels, Long ownerUserId);
 
     List<Hotel> getAllHotels();
 
-    List<Hotel> getHotelsByOwnerId(Long ownerId);
+    List<Hotel> getHotelsByUserId(Long userId);
 
     Optional<Hotel> getHotelById(Long id);
 

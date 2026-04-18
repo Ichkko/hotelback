@@ -4,10 +4,11 @@ import com.example.hotelback.exception.ErrorCode;
 import com.example.hotelback.exception.ForbiddenException;
 import com.example.hotelback.exception.ResourceNotFoundException;
 import com.example.hotelback.exception.UnauthorizedException;
+import com.example.hotelback.model.HotelRole;
 import com.example.hotelback.repository.AmenityRepository;
 import com.example.hotelback.repository.BookingRepository;
 import com.example.hotelback.repository.HighlightRepository;
-import com.example.hotelback.repository.HotelRepository;
+import com.example.hotelback.repository.HotelUserRoleRepository;
 import com.example.hotelback.repository.NotificationRepository;
 import com.example.hotelback.repository.RoomRepository;
 import com.example.hotelback.repository.UserRepository;
@@ -23,7 +24,7 @@ public class OwnershipAccessService {
     private final BookingRepository bookingRepository;
     private final NotificationRepository notificationRepository;
     private final WishlistRepository wishlistRepository;
-    private final HotelRepository hotelRepository;
+    private final HotelUserRoleRepository hotelUserRoleRepository;
     private final RoomRepository roomRepository;
     private final AmenityRepository amenityRepository;
     private final HighlightRepository highlightRepository;
@@ -32,7 +33,7 @@ public class OwnershipAccessService {
                                   BookingRepository bookingRepository,
                                   NotificationRepository notificationRepository,
                                   WishlistRepository wishlistRepository,
-                                  HotelRepository hotelRepository,
+                                  HotelUserRoleRepository hotelUserRoleRepository,
                                   RoomRepository roomRepository,
                                   AmenityRepository amenityRepository,
                                   HighlightRepository highlightRepository) {
@@ -40,7 +41,7 @@ public class OwnershipAccessService {
         this.bookingRepository = bookingRepository;
         this.notificationRepository = notificationRepository;
         this.wishlistRepository = wishlistRepository;
-        this.hotelRepository = hotelRepository;
+        this.hotelUserRoleRepository = hotelUserRoleRepository;
         this.roomRepository = roomRepository;
         this.amenityRepository = amenityRepository;
         this.highlightRepository = highlightRepository;
@@ -116,11 +117,21 @@ public class OwnershipAccessService {
         }
 
         Long currentUserId = resolveCurrentUserId(principal);
-        Long ownerId = hotelRepository.findOwnerIdById(hotelId)
-                .orElseThrow(() -> new ResourceNotFoundException("Зочид буудал олдсонгүй: ID=" + hotelId));
-
-        if (ownerId == null || !currentUserId.equals(ownerId)) {
+        if (!hotelUserRoleRepository.existsByHotelIdAndUserIdAndRole(hotelId, currentUserId, HotelRole.OWNER)) {
             throw new ForbiddenException(ErrorCode.FORBIDDEN, "Та зөвхөн өөрийн буудлыг удирдах эрхтэй");
+        }
+    }
+
+    public void assertHotelStaffOrAdmin(Long hotelId, UserDetails principal) {
+        if (isAdmin(principal)) {
+            return;
+        }
+
+        Long currentUserId = resolveCurrentUserId(principal);
+        boolean isStaff = hotelUserRoleRepository.existsByHotelIdAndUserIdAndRole(hotelId, currentUserId, HotelRole.OWNER)
+                || hotelUserRoleRepository.existsByHotelIdAndUserIdAndRole(hotelId, currentUserId, HotelRole.RECEPTION);
+        if (!isStaff) {
+            throw new ForbiddenException(ErrorCode.FORBIDDEN, "Та энэ буудлын ажилтан биш байна");
         }
     }
 
@@ -130,10 +141,10 @@ public class OwnershipAccessService {
         }
 
         Long currentUserId = resolveCurrentUserId(principal);
-        Long ownerId = roomRepository.findHotelOwnerIdByRoomId(roomId)
+        Long hotelId = roomRepository.findHotelIdByRoomId(roomId)
                 .orElseThrow(() -> new ResourceNotFoundException("Өрөө олдсонгүй: ID=" + roomId));
-
-        if (ownerId == null || !currentUserId.equals(ownerId)) {
+        if (!hotelUserRoleRepository.existsByHotelIdAndUserIdAndRole(hotelId, currentUserId, HotelRole.OWNER)
+                && !hotelUserRoleRepository.existsByHotelIdAndUserIdAndRole(hotelId, currentUserId, HotelRole.RECEPTION)) {
             throw new ForbiddenException(ErrorCode.FORBIDDEN, "Та зөвхөн өөрийн буудлын өрөөг удирдах эрхтэй");
         }
     }
@@ -144,10 +155,10 @@ public class OwnershipAccessService {
         }
 
         Long currentUserId = resolveCurrentUserId(principal);
-        Long ownerId = amenityRepository.findHotelOwnerIdByAmenityId(amenityId)
+        Long hotelId = amenityRepository.findHotelIdByAmenityId(amenityId)
                 .orElseThrow(() -> new ResourceNotFoundException("Amenity олдсонгүй: ID=" + amenityId));
-
-        if (ownerId == null || !currentUserId.equals(ownerId)) {
+        if (!hotelUserRoleRepository.existsByHotelIdAndUserIdAndRole(hotelId, currentUserId, HotelRole.OWNER)
+                && !hotelUserRoleRepository.existsByHotelIdAndUserIdAndRole(hotelId, currentUserId, HotelRole.RECEPTION)) {
             throw new ForbiddenException(ErrorCode.FORBIDDEN, "Та зөвхөн өөрийн буудлын amenity-г удирдах эрхтэй");
         }
     }
@@ -158,10 +169,10 @@ public class OwnershipAccessService {
         }
 
         Long currentUserId = resolveCurrentUserId(principal);
-        Long ownerId = highlightRepository.findHotelOwnerIdByHighlightId(highlightId)
+        Long hotelId = highlightRepository.findHotelIdByHighlightId(highlightId)
                 .orElseThrow(() -> new ResourceNotFoundException("Highlight олдсонгүй: ID=" + highlightId));
-
-        if (ownerId == null || !currentUserId.equals(ownerId)) {
+        if (!hotelUserRoleRepository.existsByHotelIdAndUserIdAndRole(hotelId, currentUserId, HotelRole.OWNER)
+                && !hotelUserRoleRepository.existsByHotelIdAndUserIdAndRole(hotelId, currentUserId, HotelRole.RECEPTION)) {
             throw new ForbiddenException(ErrorCode.FORBIDDEN, "Та зөвхөн өөрийн буудлын highlight-ыг удирдах эрхтэй");
         }
     }

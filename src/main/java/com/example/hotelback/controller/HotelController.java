@@ -6,7 +6,6 @@ import com.example.hotelback.dto.RoomResponse;
 import com.example.hotelback.dto.UpdateHotelRequest;
 import com.example.hotelback.mapper.DtoMapper;
 import com.example.hotelback.model.Hotel;
-import com.example.hotelback.model.User;
 import com.example.hotelback.security.OwnershipAccessService;
 import com.example.hotelback.service.HotelService;
 import com.example.hotelback.service.RoomService;
@@ -41,31 +40,22 @@ public class HotelController {
     public ResponseEntity<HotelResponse> createHotel(@Valid @RequestBody CreateHotelRequest request,
                                                      @AuthenticationPrincipal UserDetails principal) {
         Hotel hotel = dtoMapper.toHotel(request);
-        if (!ownershipAccessService.isAdmin(principal)) {
-            User owner = new User();
-            owner.setId(ownershipAccessService.resolveCurrentUserId(principal));
-            hotel.setOwner(owner);
-        }
-        return ResponseEntity.ok(dtoMapper.toHotelResponse(hotelService.createHotel(hotel)));
+        Long ownerUserId = ownershipAccessService.isAdmin(principal)
+                ? request.getOwnerUserId()
+                : ownershipAccessService.resolveCurrentUserId(principal);
+        return ResponseEntity.ok(dtoMapper.toHotelResponse(hotelService.createHotel(hotel, ownerUserId)));
     }
 
     @PostMapping("/batch")
     public ResponseEntity<List<HotelResponse>> createHotels(@Valid @RequestBody List<CreateHotelRequest> requests,
                                                             @AuthenticationPrincipal UserDetails principal) {
-        Long currentUserId = ownershipAccessService.resolveCurrentUserId(principal);
         boolean admin = ownershipAccessService.isAdmin(principal);
+        Long currentUserId = admin ? null : ownershipAccessService.resolveCurrentUserId(principal);
 
-        List<Hotel> hotels = requests.stream().map(request -> {
-            Hotel hotel = dtoMapper.toHotel(request);
-            if (!admin) {
-                User owner = new User();
-                owner.setId(currentUserId);
-                hotel.setOwner(owner);
-            }
-            return hotel;
-        }).toList();
+        List<Hotel> hotels = requests.stream().map(dtoMapper::toHotel).toList();
+        Long ownerUserId = admin ? null : currentUserId;
 
-        return ResponseEntity.ok(hotelService.createHotels(hotels)
+        return ResponseEntity.ok(hotelService.createHotels(hotels, ownerUserId)
                 .stream().map(dtoMapper::toHotelResponse).toList());
     }
 
@@ -81,7 +71,7 @@ public class HotelController {
         }
 
         Long currentUserId = ownershipAccessService.resolveCurrentUserId(principal);
-        return ResponseEntity.ok(hotelService.getHotelsByOwnerId(currentUserId)
+        return ResponseEntity.ok(hotelService.getHotelsByUserId(currentUserId)
                 .stream().map(dtoMapper::toHotelResponse).toList());
     }
 

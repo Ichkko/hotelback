@@ -22,6 +22,6 @@ public class CreateHotelRequest {
 
     private String coverImageUrl;
 
-    // Зөвхөн ADMIN үүсгэх үед өөр эзэн оноох боломжтой.
-    private Long ownerId;
+    // Зөвхөн ADMIN үүсгэх үед өөр хэрэглэгчид OWNER үүрэг оноох боломжтой.
+    private Long ownerUserId;
 }

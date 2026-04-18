@@ -48,19 +48,20 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/amenities/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/highlights/**").permitAll()
 
-                        // ADMIN зөвхөн
+                        // Зочид буудал үүсгэх/устгах: OWNER эсвэл ADMIN
                         .requestMatchers(HttpMethod.POST, "/api/hotels/**").hasAnyRole("ADMIN", "OWNER")
                         .requestMatchers(HttpMethod.PUT, "/api/hotels/**").hasAnyRole("ADMIN", "OWNER")
                         .requestMatchers(HttpMethod.DELETE, "/api/hotels/**").hasAnyRole("ADMIN", "OWNER")
-                        .requestMatchers(HttpMethod.POST, "/api/rooms/**").hasAnyRole("ADMIN", "OWNER")
-                        .requestMatchers(HttpMethod.PUT, "/api/rooms/**").hasAnyRole("ADMIN", "OWNER")
-                        .requestMatchers(HttpMethod.DELETE, "/api/rooms/**").hasAnyRole("ADMIN", "OWNER")
-                        .requestMatchers(HttpMethod.POST, "/api/amenities/**").hasAnyRole("ADMIN", "OWNER")
-                        .requestMatchers(HttpMethod.PUT, "/api/amenities/**").hasAnyRole("ADMIN", "OWNER")
-                        .requestMatchers(HttpMethod.DELETE, "/api/amenities/**").hasAnyRole("ADMIN", "OWNER")
-                        .requestMatchers(HttpMethod.POST, "/api/highlights/**").hasAnyRole("ADMIN", "OWNER")
-                        .requestMatchers(HttpMethod.PUT, "/api/highlights/**").hasAnyRole("ADMIN", "OWNER")
-                        .requestMatchers(HttpMethod.DELETE, "/api/highlights/**").hasAnyRole("ADMIN", "OWNER")
+                        // Өрөө/amenity/highlight: OWNER, RECEPTION, ADMIN (нарийн эрх OwnershipAccessService-д)
+                        .requestMatchers(HttpMethod.POST, "/api/rooms/**").hasAnyRole("ADMIN", "OWNER", "RECEPTION")
+                        .requestMatchers(HttpMethod.PUT, "/api/rooms/**").hasAnyRole("ADMIN", "OWNER", "RECEPTION")
+                        .requestMatchers(HttpMethod.DELETE, "/api/rooms/**").hasAnyRole("ADMIN", "OWNER", "RECEPTION")
+                        .requestMatchers(HttpMethod.POST, "/api/amenities/**").hasAnyRole("ADMIN", "OWNER", "RECEPTION")
+                        .requestMatchers(HttpMethod.PUT, "/api/amenities/**").hasAnyRole("ADMIN", "OWNER", "RECEPTION")
+                        .requestMatchers(HttpMethod.DELETE, "/api/amenities/**").hasAnyRole("ADMIN", "OWNER", "RECEPTION")
+                        .requestMatchers(HttpMethod.POST, "/api/highlights/**").hasAnyRole("ADMIN", "OWNER", "RECEPTION")
+                        .requestMatchers(HttpMethod.PUT, "/api/highlights/**").hasAnyRole("ADMIN", "OWNER", "RECEPTION")
+                        .requestMatchers(HttpMethod.DELETE, "/api/highlights/**").hasAnyRole("ADMIN", "OWNER", "RECEPTION")
                         .requestMatchers("/api/users/**").hasRole("ADMIN")
 
                         // Бусад бүх endpoint нэвтэрсэн хэрэглэгч шаардана

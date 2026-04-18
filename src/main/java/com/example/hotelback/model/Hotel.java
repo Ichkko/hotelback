@@ -1,5 +1,7 @@
 package com.example.hotelback.model;
 
+import com.example.hotelback.model.HotelRole;
+import com.example.hotelback.model.HotelUserRole;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.Column;
@@ -50,9 +52,17 @@ public class Hotel extends BaseEntity {
     @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private User owner;
 
+    @JsonIgnore
+    @OneToMany(mappedBy = "hotel")
+    private List<HotelUserRole> staffRoles = new ArrayList<>();
+
     @Transient
     public Long getOwnerId() {
-        return owner != null ? owner.getId() : null;
+        return staffRoles.stream()
+                .filter(r -> r.getRole() == HotelRole.OWNER)
+                .map(r -> r.getUser().getId())
+                .findFirst()
+                .orElse(owner != null ? owner.getId() : null);
     }
 
     @JsonIgnore

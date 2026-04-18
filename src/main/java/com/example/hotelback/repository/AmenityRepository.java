@@ -11,6 +11,6 @@ import java.util.Optional;
 @Repository
 public interface AmenityRepository extends JpaRepository<Amenity, Long> {
 
-    @Query("select a.hotel.owner.id from Amenity a where a.id = :amenityId")
-    Optional<Long> findHotelOwnerIdByAmenityId(@Param("amenityId") Long amenityId);
+    @Query("select a.hotel.id from Amenity a where a.id = :amenityId")
+    Optional<Long> findHotelIdByAmenityId(@Param("amenityId") Long amenityId);
 }

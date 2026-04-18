@@ -56,6 +56,6 @@ public interface RoomRepository extends JpaRepository<Room, Long> {
     @Query("select r from Room r where r.id = :id")
     Optional<Room> findByIdForUpdate(@Param("id") Long id);
 
-    @Query("select r.hotel.owner.id from Room r where r.id = :roomId")
-    Optional<Long> findHotelOwnerIdByRoomId(@Param("roomId") Long roomId);
+    @Query("select r.hotel.id from Room r where r.id = :roomId")
+    Optional<Long> findHotelIdByRoomId(@Param("roomId") Long roomId);
 }

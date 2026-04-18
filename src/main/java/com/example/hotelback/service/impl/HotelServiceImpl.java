@@ -3,9 +3,14 @@ package com.example.hotelback.service.impl;
 
 import com.example.hotelback.exception.ResourceNotFoundException;
 import com.example.hotelback.model.Hotel;
+import com.example.hotelback.model.HotelRole;
+import com.example.hotelback.model.HotelUserRole;
+import com.example.hotelback.model.User;
 import com.example.hotelback.repository.HotelRepository;
+import com.example.hotelback.repository.HotelUserRoleRepository;
 import com.example.hotelback.service.HotelService;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -14,19 +19,32 @@ import java.util.Optional;
 public class HotelServiceImpl implements HotelService {
 
     private final HotelRepository hotelRepository;
+    private final HotelUserRoleRepository hotelUserRoleRepository;
 
-    public HotelServiceImpl(HotelRepository hotelRepository) {
+    public HotelServiceImpl(HotelRepository hotelRepository,
+                            HotelUserRoleRepository hotelUserRoleRepository) {
         this.hotelRepository = hotelRepository;
+        this.hotelUserRoleRepository = hotelUserRoleRepository;
     }
 
     @Override
-    public Hotel createHotel(Hotel hotel) {
-        return hotelRepository.save(hotel);
+    @Transactional
+    public Hotel createHotel(Hotel hotel, Long ownerUserId) {
+        Hotel saved = hotelRepository.save(hotel);
+        if (ownerUserId != null) {
+            assignOwner(saved, ownerUserId);
+        }
+        return saved;
     }
 
     @Override
-    public List<Hotel> createHotels(List<Hotel> hotels) {
-        return hotelRepository.saveAll(hotels);
+    @Transactional
+    public List<Hotel> createHotels(List<Hotel> hotels, Long ownerUserId) {
+        List<Hotel> saved = hotelRepository.saveAll(hotels);
+        if (ownerUserId != null) {
+            saved.forEach(h -> assignOwner(h, ownerUserId));
+        }
+        return saved;
     }
 
     @Override
@@ -35,8 +53,8 @@ public class HotelServiceImpl implements HotelService {
     }
 
     @Override
-    public List<Hotel> getHotelsByOwnerId(Long ownerId) {
-        return hotelRepository.findByOwnerId(ownerId);
+    public List<Hotel> getHotelsByUserId(Long userId) {
+        return hotelRepository.findByUserId(userId);
     }
 
     @Override
@@ -69,5 +87,15 @@ public class HotelServiceImpl implements HotelService {
     @Override
     public List<Hotel> searchHotelsByName(String name) {
         return hotelRepository.findByNameContainingIgnoreCase(name);
+    }
+
+    private void assignOwner(Hotel hotel, Long userId) {
+        HotelUserRole role = new HotelUserRole();
+        role.setHotel(hotel);
+        User user = new User();
+        user.setId(userId);
+        role.setUser(user);
+        role.setRole(HotelRole.OWNER);
+        hotelUserRoleRepository.save(role);
     }
 }
