@@ -4,9 +4,6 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
@@ -16,6 +13,7 @@ import lombok.Setter;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Getter
 @Setter
@@ -42,17 +40,52 @@ public class Hotel extends BaseEntity {
     @Column(name = "starting_price")
     private Double startingPrice;
 
-    @Column(name = "cover_image_url", length = 255)
+    @Column(name = "cover_image_url", length = 1000)
     private String coverImageUrl;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "owner_id")
-    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
-    private User owner;
+    @JsonIgnore
+    @OneToMany(mappedBy = "hotel")
+    private List<HotelUserRole> staffRoles = new ArrayList<>();
 
     @Transient
     public Long getOwnerId() {
-        return owner != null ? owner.getId() : null;
+        return staffRoles.stream()
+                .filter(r -> r.getRole() == HotelRole.OWNER)
+                .map(r -> r.getUser().getId())
+                .findFirst()
+                .orElse(null);
+    }
+
+    @Transient
+    public List<Long> getOwnerIds() {
+        return staffRoles.stream()
+                .filter(r -> r.getRole() == HotelRole.OWNER)
+                .map(r -> r.getUser().getId())
+                .collect(Collectors.toList());
+    }
+
+    @Transient
+    public List<Long> getReceptionistIds() {
+        return staffRoles.stream()
+                .filter(r -> r.getRole() == HotelRole.RECEPTION)
+                .map(r -> r.getUser().getId())
+                .collect(Collectors.toList());
+    }
+
+    @Transient
+    public List<Long> getManagerIds() {
+        return staffRoles.stream()
+                .filter(r -> r.getRole() == HotelRole.MANAGER)
+                .map(r -> r.getUser().getId())
+                .collect(Collectors.toList());
+    }
+
+    @Transient
+    public List<Long> getAccountantIds() {
+        return staffRoles.stream()
+                .filter(r -> r.getRole() == HotelRole.ACCOUNTANT)
+                .map(r -> r.getUser().getId())
+                .collect(Collectors.toList());
     }
 
     @JsonIgnore

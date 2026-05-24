@@ -19,9 +19,9 @@ public interface RoomRepository extends JpaRepository<Room, Long> {
     @Query(value = "select r from Room r where r.hotel.id = :hotelId", countQuery = "select count(r) from Room r where r.hotel.id = :hotelId")
     List<Room> findByHotel_Id(@Param("hotelId") Long hotelId);
 
-    /**
-     * Тухайн зочид буудлын захиалгад ороогүй (available) өрөөнүүдийг буцаана.
-     */
+    @Query("select count(r) from Room r where r.hotel.id = :hotelId")
+    long countByHotelId(@Param("hotelId") Long hotelId);
+
     @Query(value = """
         select r
         from Room r
@@ -56,6 +56,21 @@ public interface RoomRepository extends JpaRepository<Room, Long> {
     @Query("select r from Room r where r.id = :id")
     Optional<Room> findByIdForUpdate(@Param("id") Long id);
 
-    @Query("select r.hotel.owner.id from Room r where r.id = :roomId")
-    Optional<Long> findHotelOwnerIdByRoomId(@Param("roomId") Long roomId);
+    @Query("""
+            select count(r) > 0
+            from Room r
+            join r.hotel h
+            join h.staffRoles hur
+            where r.id = :roomId and hur.user.id = :userId and hur.role = com.example.hotelback.model.HotelRole.OWNER
+            """)
+    boolean existsByIdAndHotelOwnerId(@Param("roomId") Long roomId, @Param("userId") Long userId);
+
+    @Query("""
+            select count(r) > 0
+            from Room r
+            join r.hotel h
+            join h.staffRoles hur
+            where r.id = :roomId and hur.user.id = :userId and hur.role = com.example.hotelback.model.HotelRole.RECEPTION
+            """)
+    boolean existsByIdAndHotelReceptionistId(@Param("roomId") Long roomId, @Param("userId") Long userId);
 }

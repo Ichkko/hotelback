@@ -4,6 +4,11 @@ import com.example.hotelback.dto.*;
 import com.example.hotelback.model.*;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Objects;
+
 @Component
 public class DtoMapper {
 
@@ -47,11 +52,6 @@ public class DtoMapper {
         Hotel hotel = new Hotel();
         applyHotelFields(hotel, request.getName(), request.getAddress(), request.getAimag(), request.getPhone(),
                 request.getDescription(), request.getStartingPrice(), request.getCoverImageUrl());
-        if (request.getOwnerId() != null) {
-            User owner = new User();
-            owner.setId(request.getOwnerId());
-            hotel.setOwner(owner);
-        }
         return hotel;
     }
 
@@ -69,7 +69,8 @@ public class DtoMapper {
         room.setHotel(hotel);
 
         applyRoomFields(room, request.getRoomType(), request.getPrice(), request.getCapacity(), request.getStatus(),
-                request.getDetails(), request.getRoomDetails());
+                request.getRoomNumber(), request.getFloor(), request.getWing(), request.getSection(),
+                request.getPositionX(), request.getPositionY(), request.getDetails(), request.getRoomDetails());
 
         return room;
     }
@@ -77,7 +78,8 @@ public class DtoMapper {
     public Room toRoom(UpdateRoomRequest request) {
         Room room = new Room();
         applyRoomFields(room, request.getRoomType(), request.getPrice(), request.getCapacity(), request.getStatus(),
-                request.getDetails(), request.getRoomDetails());
+                request.getRoomNumber(), request.getFloor(), request.getWing(), request.getSection(),
+                request.getPositionX(), request.getPositionY(), request.getDetails(), request.getRoomDetails());
 
         return room;
     }
@@ -93,7 +95,102 @@ public class DtoMapper {
                 .startingPrice(hotel.getStartingPrice())
                 .coverImageUrl(hotel.getCoverImageUrl())
                 .ownerId(hotel.getOwnerId())
+                .ownerIds(nullSafeList(hotel.getOwnerIds()))
+                .managerIds(nullSafeList(hotel.getManagerIds()))
+                .receptionistIds(nullSafeList(hotel.getReceptionistIds()))
+                .accountantIds(nullSafeList(hotel.getAccountantIds()))
                 .build();
+    }
+
+    public HotelResponse toHotelAccessResponse(Hotel hotel, Long currentUserId) {
+        HotelMembershipResponse membership = buildMembership(hotel, currentUserId);
+        HotelPermissionsResponse permissions = buildPermissions(hotel, currentUserId);
+
+        return HotelResponse.builder()
+                .id(hotel.getId())
+                .name(hotel.getName())
+                .address(hotel.getAddress())
+                .aimag(hotel.getAimag())
+                .phone(hotel.getPhone())
+                .description(hotel.getDescription())
+                .startingPrice(hotel.getStartingPrice())
+                .coverImageUrl(hotel.getCoverImageUrl())
+                .ownerId(hotel.getOwnerId())
+                .ownerIds(nullSafeList(hotel.getOwnerIds()))
+                .managerIds(nullSafeList(hotel.getManagerIds()))
+                .receptionistIds(nullSafeList(hotel.getReceptionistIds()))
+                .accountantIds(nullSafeList(hotel.getAccountantIds()))
+                .membership(membership)
+                .permissions(permissions)
+                .build();
+    }
+
+    private <T> List<T> nullSafeList(List<T> list) {
+        return list != null ? list : List.of();
+    }
+
+    private HotelMembershipResponse buildMembership(Hotel hotel, Long currentUserId) {
+        if (currentUserId == null) {
+            return null;
+        }
+
+        HotelRole effectiveRole = hotel.getStaffRoles().stream()
+                .filter(Objects::nonNull)
+                .filter(hur -> hur.getUser() != null && Objects.equals(hur.getUser().getId(), currentUserId))
+                .map(HotelUserRole::getRole)
+                .filter(Objects::nonNull)
+                .max(Comparator.comparingInt(this::rolePriority))
+                .orElse(null);
+
+        if (effectiveRole == null) {
+            return null;
+        }
+
+        return HotelMembershipResponse.builder()
+                .hotelId(hotel.getId())
+                .hotelName(hotel.getName())
+                .role(effectiveRole.name())
+                .build();
+    }
+
+    private HotelPermissionsResponse buildPermissions(Hotel hotel, Long currentUserId) {
+        if (currentUserId == null) {
+            return null;
+        }
+
+        List<HotelRole> roles = hotel.getStaffRoles().stream()
+                .filter(Objects::nonNull)
+                .filter(hur -> hur.getUser() != null && Objects.equals(hur.getUser().getId(), currentUserId))
+                .map(HotelUserRole::getRole)
+                .filter(Objects::nonNull)
+                .toList();
+
+        if (roles.isEmpty()) {
+            return null;
+        }
+
+        return HotelPermissionsResponse.builder()
+                .canManageHotel(hasPermission(roles, HotelPermission.HOTEL_UPDATE))
+                .canManageRooms(hasPermission(roles, HotelPermission.ROOM_MANAGE))
+                .canViewBookings(hasPermission(roles, HotelPermission.BOOKING_VIEW))
+                .canUpdateBookings(hasPermission(roles, HotelPermission.BOOKING_UPDATE))
+                .canManagePayments(hasPermission(roles, HotelPermission.PAYMENT_MANAGE))
+                .canManageStaff(hasPermission(roles, HotelPermission.STAFF_MANAGE))
+                .canViewReports(hasPermission(roles, HotelPermission.REPORT_VIEW))
+                .build();
+    }
+
+    private boolean hasPermission(List<HotelRole> roles, HotelPermission permission) {
+        return roles.stream().anyMatch(role -> role.hasPermission(permission));
+    }
+
+    private int rolePriority(HotelRole role) {
+        return switch (role) {
+            case OWNER -> 4;
+            case MANAGER -> 3;
+            case ACCOUNTANT -> 2;
+            case RECEPTION -> 1;
+        };
     }
 
     public RoomResponse toRoomResponse(Room room) {
@@ -103,11 +200,16 @@ public class DtoMapper {
                 .roomType(room.getRoomType())
                 .price(room.getPrice())
                 .capacity(room.getCapacity())
+                .roomNumber(room.getRoomNumber())
+                .floor(room.getFloor())
+                .wing(room.getWing())
+                .section(room.getSection())
+                .positionX(room.getPositionX())
+                .positionY(room.getPositionY())
                 .status(room.getStatus())
-         .details(room.getDetails().stream().map(this::toRoomDetailResponse).toList())
-
+                .details(room.getDetails().stream().map(this::toRoomDetailResponse).toList())
+                .images(room.getRoomImages().stream().map(this::toRoomImageResponse).toList())
                 .roomDetails(room.getRoomDetails())
-
                 .build();
     }
 
@@ -130,6 +232,7 @@ public class DtoMapper {
                 .totalPrice(booking.getTotalPrice())
                 .bookingNumber(booking.getBookingNumber())
                 .status(booking.getStatus())
+                .createdAt(booking.getCreatedAt())
                 .build();
     }
 
@@ -144,16 +247,29 @@ public class DtoMapper {
                 .build();
     }
 
+    public RoomStatusHistoryResponse toRoomStatusHistoryResponse(RoomStatusHistory history) {
+        return RoomStatusHistoryResponse.builder()
+                .id(history.getId())
+                .roomId(history.getRoom() != null ? history.getRoom().getId() : null)
+                .status(history.getStatus())
+                .startDate(history.getStartDate())
+                .endDate(history.getEndDate())
+                .note(history.getNote())
+                .build();
+    }
+
     public UserSummaryResponse toUserSummaryResponse(User user) {
         if (user == null) {
             return null;
         }
+        String globalRole = user.getGlobalRole() != null ? user.getGlobalRole().name() : GlobalRole.USER.name();
         return UserSummaryResponse.builder()
                 .id(user.getId())
                 .name(user.getName())
                 .email(user.getEmail())
                 .phone(user.getPhone())
-                .role(user.getRole())
+                .role(globalRole)
+                .globalRole(globalRole)
                 .build();
     }
 
@@ -174,6 +290,14 @@ public class DtoMapper {
                 .label(detail.getLabel())
                 .value(detail.getValue())
                 .displayOrder(detail.getDisplayOrder())
+                .build();
+    }
+
+    public RoomImageResponse toRoomImageResponse(RoomImage roomImage) {
+        return RoomImageResponse.builder()
+                .id(roomImage.getId())
+                .imageUrl(roomImage.getImageUrl())
+                .description(roomImage.getDescription())
                 .build();
     }
 
@@ -211,11 +335,20 @@ public class DtoMapper {
         hotel.setCoverImageUrl(coverImageUrl);
     }
 
+
     private void applyRoomFields(Room room, String roomType, Double price, Integer capacity, RoomStatus status,
-                                 java.util.List<RoomDetailRequest> details, String roomDetails) {
+                                 String roomNumber, Integer floor, String wing, String section,
+                                 Double positionX, Double positionY, java.util.List<RoomDetailRequest> details,
+                                 String roomDetails) {
         room.setRoomType(roomType);
         room.setPrice(price);
         room.setCapacity(capacity);
+        room.setRoomNumber(roomNumber);
+        room.setFloor(floor);
+        room.setWing(wing);
+        room.setSection(section);
+        room.setPositionX(positionX);
+        room.setPositionY(positionY);
         room.setStatus(status);
 
         room.getDetails().clear();

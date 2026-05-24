@@ -1,6 +1,7 @@
 package com.example.hotelback.service;
 
 import com.example.hotelback.model.Room;
+import org.springframework.security.core.userdetails.UserDetails;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -8,7 +9,7 @@ import java.util.Optional;
 
 public interface RoomService {
 
-    Room createRoom(Room room);
+    Room createRoom(Room room, UserDetails principal);
 
     List<Room> getAllRooms();
 
@@ -16,9 +17,13 @@ public interface RoomService {
 
     List<Room> getRoomsByHotelId(Long hotelId);
 
-    Room updateRoom(Long id, Room room);
+    default List<Room> getRoomsByHotelId(Long hotelId, UserDetails principal) {
+        return getRoomsByHotelId(hotelId);
+    }
 
-    void deleteRoomById(Long id);
+    Room updateRoom(Long id, Room room, UserDetails principal);
+
+    void deleteRoomById(Long id, UserDetails principal);
 
     List<Room> getAvailableRooms(Long hotelId, LocalDate checkin, LocalDate checkout);
 }

@@ -1,0 +1,14 @@
+package com.example.hotelback.exception;
+
+public enum ErrorCode {
+    RESOURCE_NOT_FOUND,
+    VALIDATION_ERROR,
+    INVALID_REQUEST,
+    CONFLICT,
+    AUTH_INVALID_CREDENTIALS,
+    AUTH_INVALID_TOKEN,
+    AUTH_TOKEN_EXPIRED,
+    AUTH_RATE_LIMITED,
+    FORBIDDEN,
+    INTERNAL_SERVER_ERROR
+}

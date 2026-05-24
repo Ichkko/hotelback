@@ -4,6 +4,7 @@ import com.example.hotelback.dto.BookingResponse;
 import com.example.hotelback.dto.CreateBookingRequest;
 import com.example.hotelback.mapper.DtoMapper;
 import com.example.hotelback.model.Booking;
+import com.example.hotelback.model.HotelPermission;
 import com.example.hotelback.security.OwnershipAccessService;
 import com.example.hotelback.service.BookingService;
 import org.junit.jupiter.api.BeforeEach;
@@ -106,12 +107,23 @@ class BookingControllerAuthorizationTest {
     }
 
     @Test
-    void getBookingByIdChecksBookingOwnership() {
+    void getBookingsByHotelChecksBookingViewPermission() {
+        when(bookingService.getBookingsByHotelId(8L)).thenReturn(List.of());
+
+        bookingController.getBookingsByHotel(8L, userPrincipal);
+
+        verify(ownershipAccessService).assertHotelPermission(8L, userPrincipal, HotelPermission.BOOKING_VIEW,
+                "Та энэ буудлын захиалгуудыг харах эрхгүй");
+        verify(bookingService).getBookingsByHotelId(8L);
+    }
+
+    @Test
+    void getBookingByIdChecksBookingCustomerOrHotelStaffAccess() {
         when(bookingService.getBookingById(20L)).thenReturn(java.util.Optional.of(new Booking()));
         when(dtoMapper.toBookingResponse(any(Booking.class))).thenReturn(BookingResponse.builder().id(20L).build());
 
         bookingController.getBookingById(20L, userPrincipal);
 
-        verify(ownershipAccessService).assertBookingOwnerOrAdmin(20L, userPrincipal);
+        verify(ownershipAccessService).assertBookingCustomerOrHotelStaffOrAdmin(20L, userPrincipal);
     }
 }

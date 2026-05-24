@@ -3,13 +3,16 @@ package com.example.hotelback.service.impl;
 import com.example.hotelback.exception.ResourceNotFoundException;
 import com.example.hotelback.model.Booking;
 import com.example.hotelback.model.BookingStatus;
+import com.example.hotelback.model.HotelPermission;
 import com.example.hotelback.model.Payment;
 import com.example.hotelback.model.PaymentStatus;
 import com.example.hotelback.repository.BookingRepository;
 import com.example.hotelback.repository.PaymentRepository;
+import com.example.hotelback.security.OwnershipAccessService;
 import com.example.hotelback.service.NotificationService;
 import com.example.hotelback.service.PaymentService;
 import org.springframework.beans.BeanUtils;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,13 +25,16 @@ public class PaymentServiceImpl implements PaymentService {
     private final PaymentRepository paymentRepository;
     private final BookingRepository bookingRepository;
     private final NotificationService notificationService;
+    private final OwnershipAccessService ownershipAccessService;
 
     public PaymentServiceImpl(PaymentRepository paymentRepository,
                               BookingRepository bookingRepository,
-                              NotificationService notificationService) {
+                              NotificationService notificationService,
+                              OwnershipAccessService ownershipAccessService) {
         this.paymentRepository = paymentRepository;
         this.bookingRepository = bookingRepository;
         this.notificationService = notificationService;
+        this.ownershipAccessService = ownershipAccessService;
     }
 
     @Override
@@ -110,6 +116,30 @@ public class PaymentServiceImpl implements PaymentService {
     @Override
     public Optional<Payment> getPaymentById(Long id) {
         return paymentRepository.findById(id);
+    }
+
+    @Override
+    public List<Payment> getPaymentsByBookingId(Long bookingId, UserDetails principal) {
+        if (principal != null) {
+            ownershipAccessService.assertBookingAnyPermission(
+                    bookingId,
+                    principal,
+                    List.of(HotelPermission.PAYMENT_MANAGE, HotelPermission.REPORT_VIEW),
+                    "Та энэ захиалгын төлбөрүүдийг харах эрхгүй"
+            );
+        }
+        return paymentRepository.findDetailedByBookingId(bookingId);
+    }
+
+    @Override
+    public List<Payment> getPaymentsByHotelId(Long hotelId, UserDetails principal) {
+        ownershipAccessService.assertHotelAnyPermission(
+                hotelId,
+                principal,
+                List.of(HotelPermission.PAYMENT_MANAGE, HotelPermission.REPORT_VIEW),
+                "Та энэ буудлын төлбөрүүдийг харах эрхгүй"
+        );
+        return paymentRepository.findByHotelId(hotelId);
     }
 
     @Override

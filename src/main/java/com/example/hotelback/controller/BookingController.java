@@ -4,6 +4,7 @@ import com.example.hotelback.dto.BookingResponse;
 import com.example.hotelback.dto.CreateBookingRequest;
 import com.example.hotelback.dto.UpdateBookingRequest;
 import com.example.hotelback.mapper.DtoMapper;
+import com.example.hotelback.model.HotelPermission;
 import com.example.hotelback.security.OwnershipAccessService;
 import com.example.hotelback.service.BookingService;
 import jakarta.validation.Valid;
@@ -57,10 +58,22 @@ public class BookingController {
         return ResponseEntity.ok(bookingService.getBookingsByUserId(userId).stream().map(dtoMapper::toBookingResponse).toList());
     }
 
+    @GetMapping("/hotel/{hotelId}")
+    public ResponseEntity<List<BookingResponse>> getBookingsByHotel(@PathVariable Long hotelId,
+                                                                    @AuthenticationPrincipal UserDetails principal) {
+        ownershipAccessService.assertHotelPermission(
+                hotelId,
+                principal,
+                HotelPermission.BOOKING_VIEW,
+                "Та энэ буудлын захиалгуудыг харах эрхгүй"
+        );
+        return ResponseEntity.ok(bookingService.getBookingsByHotelId(hotelId).stream().map(dtoMapper::toBookingResponse).toList());
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<BookingResponse> getBookingById(@PathVariable Long id,
                                                           @AuthenticationPrincipal UserDetails principal) {
-        ownershipAccessService.assertBookingOwnerOrAdmin(id, principal);
+        ownershipAccessService.assertBookingCustomerOrHotelStaffOrAdmin(id, principal);
         return bookingService.getBookingById(id)
                 .map(dtoMapper::toBookingResponse)
                 .map(ResponseEntity::ok)
@@ -71,28 +84,28 @@ public class BookingController {
     public ResponseEntity<BookingResponse> updateBooking(@PathVariable Long id,
                                                          @Valid @RequestBody UpdateBookingRequest request,
                                                          @AuthenticationPrincipal UserDetails principal) {
-        ownershipAccessService.assertBookingOwnerOrAdmin(id, principal);
+        ownershipAccessService.assertBookingCustomerOrHotelStaffOrAdmin(id, principal);
         return ResponseEntity.ok(dtoMapper.toBookingResponse(bookingService.updateBooking(id, dtoMapper.toBooking(request))));
     }
 
     @PostMapping("/{id}/confirm")
     public ResponseEntity<BookingResponse> confirmBooking(@PathVariable Long id,
                                                           @AuthenticationPrincipal UserDetails principal) {
-        ownershipAccessService.assertBookingOwnerOrAdmin(id, principal);
+        ownershipAccessService.assertBookingCustomerOrHotelStaffOrAdmin(id, principal);
         return ResponseEntity.ok(dtoMapper.toBookingResponse(bookingService.confirmBooking(id)));
     }
 
     @PostMapping("/{id}/cancel")
     public ResponseEntity<BookingResponse> cancelBooking(@PathVariable Long id,
                                                          @AuthenticationPrincipal UserDetails principal) {
-        ownershipAccessService.assertBookingOwnerOrAdmin(id, principal);
+        ownershipAccessService.assertBookingCustomerOrHotelStaffOrAdmin(id, principal);
         return ResponseEntity.ok(dtoMapper.toBookingResponse(bookingService.cancelBooking(id)));
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<String> deleteBooking(@PathVariable Long id,
                                                 @AuthenticationPrincipal UserDetails principal) {
-        ownershipAccessService.assertBookingOwnerOrAdmin(id, principal);
+        ownershipAccessService.assertBookingCustomerOrHotelStaffOrAdmin(id, principal);
         bookingService.deleteBookingById(id);
         return ResponseEntity.ok("Захиалга устгагдлаа");
     }

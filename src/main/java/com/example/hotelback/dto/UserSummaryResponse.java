@@ -10,5 +10,13 @@ public class UserSummaryResponse {
     private String name;
     private String email;
     private String phone;
+
+    /** Platform-wide role (ADMIN | USER). */
+    private String globalRole;
+
+    /**
+     * @deprecated Use {@link #globalRole} instead. Will be removed in a future release.
+     */
+    @Deprecated
     private String role;
 }

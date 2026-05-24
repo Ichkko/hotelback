@@ -1,7 +1,6 @@
 package com.example.hotelback.controller;
 
 import com.example.hotelback.model.Amenity;
-import com.example.hotelback.security.OwnershipAccessService;
 import com.example.hotelback.service.AmenityService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -15,19 +14,15 @@ import java.util.List;
 public class AmenityController {
 
     private final AmenityService amenityService;
-    private final OwnershipAccessService ownershipAccessService;
 
-    public AmenityController(AmenityService amenityService,
-                             OwnershipAccessService ownershipAccessService) {
+    public AmenityController(AmenityService amenityService) {
         this.amenityService = amenityService;
-        this.ownershipAccessService = ownershipAccessService;
     }
 
     @PostMapping
     public ResponseEntity<Amenity> createAmenity(@RequestBody Amenity amenity,
                                                  @AuthenticationPrincipal UserDetails principal) {
-        ownershipAccessService.assertHotelOwnerOrAdmin(amenity.getHotelId(), principal);
-        return ResponseEntity.ok(amenityService.createAmenity(amenity));
+        return ResponseEntity.ok(amenityService.createAmenity(amenity, principal));
     }
 
     @GetMapping
@@ -46,15 +41,13 @@ public class AmenityController {
     public ResponseEntity<Amenity> updateAmenity(@PathVariable Long id,
                                                   @RequestBody Amenity amenity,
                                                   @AuthenticationPrincipal UserDetails principal) {
-        ownershipAccessService.assertAmenityHotelOwnerOrAdmin(id, principal);
-        return ResponseEntity.ok(amenityService.updateAmenity(id, amenity));
+        return ResponseEntity.ok(amenityService.updateAmenity(id, amenity, principal));
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<String> deleteAmenity(@PathVariable Long id,
                                                  @AuthenticationPrincipal UserDetails principal) {
-        ownershipAccessService.assertAmenityHotelOwnerOrAdmin(id, principal);
-        amenityService.deleteAmenityById(id);
+        amenityService.deleteAmenityById(id, principal);
         return ResponseEntity.ok("Amenity with ID " + id + " deleted successfully");
     }
 }

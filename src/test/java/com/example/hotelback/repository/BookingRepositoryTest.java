@@ -17,7 +17,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @DataJpaTest(properties = {
         "spring.jpa.hibernate.ddl-auto=create-drop",
-        "spring.jpa.properties.hibernate.jdbc.time_zone=UTC"
+        "spring.jpa.properties.hibernate.jdbc.time_zone=UTC",
+        "spring.flyway.enabled=false"
 })
 class BookingRepositoryTest {
 
@@ -89,7 +90,7 @@ class BookingRepositoryTest {
         user.setName("Repo User");
         user.setEmail(email);
         user.setPassword("secret");
-        user.setRole("USER");
+        user.setGlobalRole(com.example.hotelback.model.GlobalRole.USER);
         entityManager.persist(user);
 
         Hotel hotel = new Hotel();

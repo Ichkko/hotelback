@@ -1,6 +1,8 @@
 package com.example.hotelback.security;
 
 import com.example.hotelback.config.JwtProperties;
+import com.example.hotelback.model.GlobalRole;
+import com.example.hotelback.model.User;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
@@ -28,12 +30,24 @@ public class JwtUtil {
         return Keys.hmacShaKeyFor(jwtProperties.secret().getBytes(StandardCharsets.UTF_8));
     }
 
+    public String generateAccessToken(User user) {
+        return generateToken(user, jwtProperties.expiration(), "access");
+    }
+
     public String generateAccessToken(String email, String role) {
-        return generateToken(email, role, jwtProperties.expiration(), "access");
+        return generateAccessToken(buildTokenUser(email, role));
+    }
+
+    public String generateRefreshToken(User user) {
+        return generateToken(user, jwtProperties.refreshExpiration(), "refresh");
     }
 
     public String generateRefreshToken(String email, String role) {
-        return generateToken(email, role, jwtProperties.refreshExpiration(), "refresh");
+        return generateRefreshToken(buildTokenUser(email, role));
+    }
+
+    public String generateToken(User user) {
+        return generateAccessToken(user);
     }
 
     public String generateToken(String email, String role) {
@@ -44,8 +58,12 @@ public class JwtUtil {
         return extractClaim(token, Claims::getSubject);
     }
 
-    public String extractRole(String token) {
-        return extractAllClaims(token).get("role", String.class);
+    public String extractGlobalRole(String token) {
+        return extractAllClaims(token).get("globalRole", String.class);
+    }
+
+    public Long extractUserId(String token) {
+        return extractAllClaims(token).get("userId", Long.class);
     }
 
     public String extractTokenType(String token) {
@@ -74,13 +92,14 @@ public class JwtUtil {
         return extractClaim(token, Claims::getExpiration).before(new Date());
     }
 
-    private String generateToken(String email, String role, long expiration, String tokenType) {
+    private String generateToken(User user, long expiration, String tokenType) {
         Map<String, Object> claims = new HashMap<>();
-        claims.put("role", role);
+        claims.put("userId", user.getId());
+        claims.put("globalRole", (user.getGlobalRole() != null ? user.getGlobalRole() : GlobalRole.USER).name());
         claims.put("tokenType", tokenType);
         return Jwts.builder()
                 .claims(claims)
-                .subject(email)
+                .subject(user.getEmail())
                 .issuedAt(new Date())
                 .expiration(new Date(System.currentTimeMillis() + expiration))
                 .signWith(getSigningKey())
@@ -97,5 +116,12 @@ public class JwtUtil {
                 .build()
                 .parseSignedClaims(token)
                 .getPayload();
+    }
+
+    private User buildTokenUser(String email, String role) {
+        User user = new User();
+        user.setEmail(email);
+        user.setGlobalRole("ADMIN".equalsIgnoreCase(role) ? GlobalRole.ADMIN : GlobalRole.USER);
+        return user;
     }
 }

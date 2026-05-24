@@ -7,6 +7,7 @@ import com.example.hotelback.repository.UserRepository;
 import com.example.hotelback.security.JwtUtil;
 import com.example.hotelback.security.LoginAttemptService;
 import com.example.hotelback.security.TokenBlacklistService;
+import com.example.hotelback.service.GoogleAuthService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -60,6 +61,9 @@ class AuthControllerTest {
     @Mock
     private LoginAttemptService loginAttemptService;
 
+    @Mock
+    private GoogleAuthService googleAuthService;
+
     private MockMvc mockMvc;
 
     @BeforeEach
@@ -70,7 +74,8 @@ class AuthControllerTest {
                 passwordEncoder,
                 jwtUtil,
                 tokenBlacklistService,
-                loginAttemptService
+                loginAttemptService,
+                googleAuthService
         );
 
         mockMvc = MockMvcBuilders.standaloneSetup(authController)
@@ -87,8 +92,8 @@ class AuthControllerTest {
             savedUser.setId(10L);
             return savedUser;
         });
-        when(jwtUtil.generateAccessToken("admin-request@example.com", "USER")).thenReturn("jwt-token");
-        when(jwtUtil.generateRefreshToken("admin-request@example.com", "USER")).thenReturn("refresh-token");
+        when(jwtUtil.generateAccessToken(any(User.class))).thenReturn("jwt-token");
+        when(jwtUtil.generateRefreshToken(any(User.class))).thenReturn("refresh-token");
 
         mockMvc.perform(post("/api/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -111,8 +116,8 @@ class AuthControllerTest {
         User savedUser = userCaptor.getValue();
         assertThat(savedUser.getRole()).isEqualTo("USER");
         assertThat(savedUser.getPassword()).isEqualTo("encoded-secret");
-        verify(jwtUtil).generateAccessToken(eq("admin-request@example.com"), eq("USER"));
-        verify(jwtUtil).generateRefreshToken(eq("admin-request@example.com"), eq("USER"));
+        verify(jwtUtil).generateAccessToken(any(User.class));
+        verify(jwtUtil).generateRefreshToken(any(User.class));
     }
 
     @Test
@@ -182,8 +187,8 @@ class AuthControllerTest {
         user.setRole("USER");
 
         when(userRepository.findByEmail("user@example.com")).thenReturn(Optional.of(user));
-        when(jwtUtil.generateAccessToken("user@example.com", "USER")).thenReturn("token-123");
-        when(jwtUtil.generateRefreshToken("user@example.com", "USER")).thenReturn("refresh-123");
+        when(jwtUtil.generateAccessToken(any(User.class))).thenReturn("token-123");
+        when(jwtUtil.generateRefreshToken(any(User.class))).thenReturn("refresh-123");
 
         mockMvc.perform(post("/api/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -202,6 +207,63 @@ class AuthControllerTest {
     }
 
     @Test
+    void googleLoginCreatesUserWhenEmailDoesNotExist() throws Exception {
+        when(googleAuthService.verify("google-id-token"))
+                .thenReturn(new GoogleAuthService.GoogleUserInfo("google@example.com", "Google User"));
+        when(userRepository.findByEmail("google@example.com")).thenReturn(Optional.empty());
+        when(userRepository.save(any(User.class))).thenAnswer(invocation -> {
+            User savedUser = invocation.getArgument(0);
+            savedUser.setId(31L);
+            return savedUser;
+        });
+        when(jwtUtil.generateAccessToken(any(User.class))).thenReturn("google-access");
+        when(jwtUtil.generateRefreshToken(any(User.class))).thenReturn("google-refresh");
+
+        mockMvc.perform(post("/api/auth/google")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(Map.of(
+                                "idToken", "google-id-token"
+                        ))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.token").value("google-access"))
+                .andExpect(jsonPath("$.refreshToken").value("google-refresh"))
+                .andExpect(jsonPath("$.email").value("google@example.com"))
+                .andExpect(jsonPath("$.role").value("USER"));
+
+        ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
+        verify(userRepository).save(userCaptor.capture());
+        assertThat(userCaptor.getValue().getPassword()).isNull();
+        assertThat(userCaptor.getValue().getGlobalRole()).isEqualTo(com.example.hotelback.model.GlobalRole.USER);
+    }
+
+    @Test
+    void googleLoginUsesExistingUserWhenEmailExists() throws Exception {
+        User existing = new User();
+        existing.setId(41L);
+        existing.setName("Existing User");
+        existing.setEmail("existing@example.com");
+        existing.setRole("USER");
+
+        when(googleAuthService.verify("google-id-token"))
+                .thenReturn(new GoogleAuthService.GoogleUserInfo("existing@example.com", "Google User"));
+        when(userRepository.findByEmail("existing@example.com")).thenReturn(Optional.of(existing));
+        when(jwtUtil.generateAccessToken(existing)).thenReturn("existing-access");
+        when(jwtUtil.generateRefreshToken(existing)).thenReturn("existing-refresh");
+
+        mockMvc.perform(post("/api/auth/gmail")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(Map.of(
+                                "idToken", "google-id-token"
+                        ))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.token").value("existing-access"))
+                .andExpect(jsonPath("$.refreshToken").value("existing-refresh"))
+                .andExpect(jsonPath("$.userId").value(41L));
+
+        verify(userRepository, never()).save(any(User.class));
+    }
+
+    @Test
     void refreshReturnsNewTokenPairForValidRefreshToken() throws Exception {
         User user = new User();
         user.setId(21L);
@@ -214,8 +276,8 @@ class AuthControllerTest {
         when(userRepository.findByEmail("user@example.com")).thenReturn(Optional.of(user));
         when(jwtUtil.isRefreshTokenValid(eq("refresh-123"), any())).thenReturn(true);
         when(jwtUtil.extractExpiration("refresh-123")).thenReturn(Instant.parse("2026-04-01T00:00:00Z"));
-        when(jwtUtil.generateAccessToken("user@example.com", "USER")).thenReturn("new-access");
-        when(jwtUtil.generateRefreshToken("user@example.com", "USER")).thenReturn("new-refresh");
+        when(jwtUtil.generateAccessToken(any(User.class))).thenReturn("new-access");
+        when(jwtUtil.generateRefreshToken(any(User.class))).thenReturn("new-refresh");
 
         mockMvc.perform(post("/api/auth/refresh")
                         .contentType(MediaType.APPLICATION_JSON)

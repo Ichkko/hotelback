@@ -2,9 +2,12 @@ package com.example.hotelback.service.impl;
 
 import com.example.hotelback.exception.ResourceNotFoundException;
 import com.example.hotelback.model.BookingStatus;
+import com.example.hotelback.model.HotelPermission;
 import com.example.hotelback.model.Room;
 import com.example.hotelback.repository.RoomRepository;
+import com.example.hotelback.security.OwnershipAccessService;
 import com.example.hotelback.service.RoomService;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -15,13 +18,22 @@ import java.util.Optional;
 public class RoomServiceImpl implements RoomService {
 
     private final RoomRepository roomRepository;
+    private final OwnershipAccessService ownershipAccessService;
 
-    public RoomServiceImpl(RoomRepository roomRepository) {
+    public RoomServiceImpl(RoomRepository roomRepository,
+                           OwnershipAccessService ownershipAccessService) {
         this.roomRepository = roomRepository;
+        this.ownershipAccessService = ownershipAccessService;
     }
 
     @Override
-    public Room createRoom(Room room) {
+    public Room createRoom(Room room, UserDetails principal) {
+        ownershipAccessService.assertHotelPermission(
+                room.getHotelId(),
+                principal,
+                HotelPermission.ROOM_MANAGE,
+                "Та зөвхөн өөрийн буудлын өрөөг удирдах эрхтэй"
+        );
         return roomRepository.save(room);
     }
 
@@ -41,12 +53,35 @@ public class RoomServiceImpl implements RoomService {
     }
 
     @Override
-    public Room updateRoom(Long id, Room room) {
+    public List<Room> getRoomsByHotelId(Long hotelId, UserDetails principal) {
+        ownershipAccessService.assertHotelAnyPermission(
+                hotelId,
+                principal,
+                List.of(HotelPermission.ROOM_MANAGE, HotelPermission.HOTEL_UPDATE),
+                "Та энэ буудлын өрөөнүүдийг харах эрхгүй"
+        );
+        return roomRepository.findByHotel_Id(hotelId);
+    }
+
+    @Override
+    public Room updateRoom(Long id, Room room, UserDetails principal) {
+        ownershipAccessService.assertRoomPermission(
+                id,
+                principal,
+                HotelPermission.ROOM_MANAGE,
+                "Та зөвхөн өөрийн буудлын өрөөг удирдах эрхтэй"
+        );
         Room existing = roomRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Өрөө олдсонгүй: ID=" + id));
         existing.setRoomType(room.getRoomType());
         existing.setPrice(room.getPrice());
         existing.setCapacity(room.getCapacity());
+        existing.setRoomNumber(room.getRoomNumber());
+        existing.setFloor(room.getFloor());
+        existing.setWing(room.getWing());
+        existing.setSection(room.getSection());
+        existing.setPositionX(room.getPositionX());
+        existing.setPositionY(room.getPositionY());
         existing.setStatus(room.getStatus());
 
         existing.getDetails().clear();
@@ -61,7 +96,13 @@ public class RoomServiceImpl implements RoomService {
     }
 
     @Override
-    public void deleteRoomById(Long id) {
+    public void deleteRoomById(Long id, UserDetails principal) {
+        ownershipAccessService.assertRoomPermission(
+                id,
+                principal,
+                HotelPermission.ROOM_MANAGE,
+                "Та зөвхөн өөрийн буудлын өрөөг удирдах эрхтэй"
+        );
         if (!roomRepository.existsById(id)) {
             throw new ResourceNotFoundException("Өрөө олдсонгүй: ID=" + id);
         }

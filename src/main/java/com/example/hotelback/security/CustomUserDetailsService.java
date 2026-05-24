@@ -1,5 +1,6 @@
 package com.example.hotelback.security;
 
+import com.example.hotelback.model.GlobalRole;
 import com.example.hotelback.model.User;
 import com.example.hotelback.repository.UserRepository;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -24,12 +25,12 @@ public class CustomUserDetailsService implements UserDetailsService {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new UsernameNotFoundException("Хэрэглэгч олдсонгүй: " + email));
 
-        String role = user.getRole() != null ? user.getRole() : "USER";
+        GlobalRole globalRole = user.getGlobalRole() != null ? user.getGlobalRole() : GlobalRole.USER;
 
         return new org.springframework.security.core.userdetails.User(
                 user.getEmail(),
                 user.getPassword(),
-                Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + role))
+                Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + globalRole.name()))
         );
     }
 }

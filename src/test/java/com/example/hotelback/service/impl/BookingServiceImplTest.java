@@ -7,6 +7,7 @@ import com.example.hotelback.model.Room;
 import com.example.hotelback.model.User;
 import com.example.hotelback.repository.BookingRepository;
 import com.example.hotelback.repository.RoomRepository;
+import com.example.hotelback.repository.RoomStatusHistoryRepository;
 import com.example.hotelback.service.NotificationService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -41,6 +42,9 @@ class BookingServiceImplTest {
     private RoomRepository roomRepository;
 
     @Mock
+    private RoomStatusHistoryRepository roomStatusHistoryRepository;
+
+    @Mock
     private NotificationService notificationService;
 
     @InjectMocks
@@ -63,7 +67,7 @@ class BookingServiceImplTest {
         user = new User();
         user.setId(15L);
         user.setEmail("guest@example.com");
-        user.setRole("USER");
+        user.setGlobalRole(com.example.hotelback.model.GlobalRole.USER);
     }
 
     @Test
@@ -104,6 +108,7 @@ class BookingServiceImplTest {
     void createBookingRejectsGuestCountLessThanOne() {
         Booking booking = validBooking();
         booking.setGuestCount(0);
+        when(roomRepository.findByIdForUpdate(7L)).thenReturn(Optional.of(room));
 
         assertThatThrownBy(() -> bookingService.createBooking(booking))
                 .isInstanceOf(IllegalArgumentException.class)

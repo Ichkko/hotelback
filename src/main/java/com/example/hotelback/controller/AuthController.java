@@ -1,6 +1,7 @@
 package com.example.hotelback.controller;
 
 import com.example.hotelback.dto.AuthResponse;
+import com.example.hotelback.dto.GoogleAuthRequest;
 import com.example.hotelback.dto.LoginRequest;
 import com.example.hotelback.dto.LogoutRequest;
 import com.example.hotelback.dto.RefreshTokenRequest;
@@ -9,11 +10,13 @@ import com.example.hotelback.exception.BadRequestException;
 import com.example.hotelback.exception.ErrorCode;
 import com.example.hotelback.exception.ResourceNotFoundException;
 import com.example.hotelback.exception.UnauthorizedException;
+import com.example.hotelback.model.GlobalRole;
 import com.example.hotelback.model.User;
 import com.example.hotelback.repository.UserRepository;
 import com.example.hotelback.security.JwtUtil;
 import com.example.hotelback.security.LoginAttemptService;
 import com.example.hotelback.security.TokenBlacklistService;
+import com.example.hotelback.service.GoogleAuthService;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -36,19 +39,22 @@ public class AuthController {
     private final JwtUtil jwtUtil;
     private final TokenBlacklistService tokenBlacklistService;
     private final LoginAttemptService loginAttemptService;
+    private final GoogleAuthService googleAuthService;
 
     public AuthController(AuthenticationManager authenticationManager,
                           UserRepository userRepository,
                           PasswordEncoder passwordEncoder,
                           JwtUtil jwtUtil,
                           TokenBlacklistService tokenBlacklistService,
-                          LoginAttemptService loginAttemptService) {
+                          LoginAttemptService loginAttemptService,
+                          GoogleAuthService googleAuthService) {
         this.authenticationManager = authenticationManager;
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtUtil = jwtUtil;
         this.tokenBlacklistService = tokenBlacklistService;
         this.loginAttemptService = loginAttemptService;
+        this.googleAuthService = googleAuthService;
     }
 
     @PostMapping("/register")
@@ -62,7 +68,7 @@ public class AuthController {
         user.setEmail(request.getEmail());
         user.setPassword(passwordEncoder.encode(request.getPassword()));
         user.setPhone(request.getPhone());
-        user.setRole("USER");
+        user.setGlobalRole(GlobalRole.USER);
 
         userRepository.save(user);
 
@@ -88,6 +94,21 @@ public class AuthController {
         return ResponseEntity.ok(buildAuthResponse(user));
     }
 
+    @PostMapping({"/google", "/gmail"})
+    public ResponseEntity<AuthResponse> googleLogin(@Valid @RequestBody GoogleAuthRequest request) {
+        GoogleAuthService.GoogleUserInfo googleUser = googleAuthService.verify(request.getIdToken());
+        User user = userRepository.findByEmail(googleUser.email())
+                .orElseGet(() -> {
+                    User newUser = new User();
+                    newUser.setName(googleUser.name());
+                    newUser.setEmail(googleUser.email());
+                    newUser.setGlobalRole(GlobalRole.USER);
+                    return userRepository.save(newUser);
+                });
+
+        return ResponseEntity.ok(buildAuthResponse(user));
+    }
+
     @PostMapping("/refresh")
     public ResponseEntity<AuthResponse> refresh(@Valid @RequestBody RefreshTokenRequest request) {
         String refreshToken = request.getRefreshToken();
@@ -103,7 +124,7 @@ public class AuthController {
             UserDetails userDetails = org.springframework.security.core.userdetails.User
                     .withUsername(user.getEmail())
                     .password(user.getPassword() != null ? user.getPassword() : "")
-                    .authorities("ROLE_" + (user.getRole() != null ? user.getRole() : "USER"))
+                    .authorities("ROLE_" + (user.getGlobalRole() != null ? user.getGlobalRole().name() : GlobalRole.USER.name()))
                     .build();
 
             if (!jwtUtil.isRefreshTokenValid(refreshToken, userDetails)) {
@@ -142,9 +163,9 @@ public class AuthController {
     }
 
     private AuthResponse buildAuthResponse(User user) {
-        String role = user.getRole() != null ? user.getRole() : "USER";
-        String accessToken = jwtUtil.generateAccessToken(user.getEmail(), role);
-        String refreshToken = jwtUtil.generateRefreshToken(user.getEmail(), role);
-        return new AuthResponse(accessToken, refreshToken, user.getId(), user.getEmail(), user.getName(), role);
+        GlobalRole globalRole = user.getGlobalRole() != null ? user.getGlobalRole() : GlobalRole.USER;
+        String accessToken = jwtUtil.generateAccessToken(user);
+        String refreshToken = jwtUtil.generateRefreshToken(user);
+        return new AuthResponse(accessToken, refreshToken, user.getId(), user.getEmail(), user.getName(), globalRole.name());
     }
 }
