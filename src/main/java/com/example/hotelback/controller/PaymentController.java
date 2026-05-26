@@ -52,10 +52,16 @@ public class PaymentController {
     @GetMapping("/{id}")
     public ResponseEntity<PaymentResponse> getPaymentById(@PathVariable Long id,
                                                           @AuthenticationPrincipal UserDetails principal) {
-        ownershipAccessService.assertAdmin(principal);
         return paymentService.getPaymentById(id)
-                .map(dtoMapper::toPaymentResponse)
-                .map(ResponseEntity::ok)
+                .map(payment -> {
+                    Long bookingId = payment.getBooking() != null ? payment.getBooking().getId() : null;
+                    if (bookingId != null) {
+                        ownershipAccessService.assertBookingCustomerOrHotelStaffOrAdmin(bookingId, principal);
+                    } else {
+                        ownershipAccessService.assertAdmin(principal);
+                    }
+                    return ResponseEntity.ok(dtoMapper.toPaymentResponse(payment));
+                })
                 .orElse(ResponseEntity.notFound().build());
     }
 

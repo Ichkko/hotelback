@@ -38,4 +38,19 @@ public class Payment extends BaseEntity {
 
     @Column(name = "payment_date")
     private Instant paymentDate;
+
+    @Column(name = "qpay_invoice_id", length = 100)
+    private String qpayInvoiceId;
+
+    @Column(name = "qpay_sender_invoice_no", length = 100)
+    private String qpaySenderInvoiceNo;
+
+    @Column(name = "qpay_qr_text", length = 2000)
+    private String qpayQrText;
+
+    @Column(name = "qpay_qr_image", columnDefinition = "TEXT")
+    private String qpayQrImage;
+
+    @Column(name = "qpay_response", columnDefinition = "TEXT")
+    private String qpayResponse;
 }

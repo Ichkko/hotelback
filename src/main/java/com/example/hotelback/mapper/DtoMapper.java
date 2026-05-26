@@ -244,6 +244,10 @@ public class DtoMapper {
                 .paymentMethod(payment.getPaymentMethod())
                 .status(payment.getStatus())
                 .paymentDate(payment.getPaymentDate())
+                .qpayInvoiceId(payment.getQpayInvoiceId())
+                .qpaySenderInvoiceNo(payment.getQpaySenderInvoiceNo())
+                .qpayQrText(payment.getQpayQrText())
+                .qpayQrImage(payment.getQpayQrImage())
                 .build();
     }
 

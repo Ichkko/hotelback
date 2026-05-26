@@ -5,19 +5,18 @@ import lombok.Builder;
 import lombok.Getter;
 
 import java.math.BigDecimal;
-import java.time.Instant;
+import java.util.List;
 
 @Getter
 @Builder
-public class PaymentResponse {
-    private Long id;
+public class QPayInvoiceResponse {
+    private Long paymentId;
     private Long bookingId;
     private BigDecimal amount;
-    private String paymentMethod;
     private PaymentStatus status;
-    private Instant paymentDate;
     private String qpayInvoiceId;
-    private String qpaySenderInvoiceNo;
-    private String qpayQrText;
-    private String qpayQrImage;
+    private String senderInvoiceNo;
+    private String qrText;
+    private String qrImage;
+    private List<QPayUrlResponse> urls;
 }

@@ -7,12 +7,17 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface PaymentRepository extends JpaRepository<Payment, Long> {
 
     @Query(value = "select p from Payment p where p.booking.id = :bookingId", countQuery = "select count(p) from Payment p where p.booking.id = :bookingId")
     List<Payment> findByBooking_Id(@Param("bookingId") Long bookingId);
+
+    Optional<Payment> findByQpayInvoiceId(String qpayInvoiceId);
+
+    Optional<Payment> findByQpaySenderInvoiceNo(String qpaySenderInvoiceNo);
 
     @Query("""
         select p
